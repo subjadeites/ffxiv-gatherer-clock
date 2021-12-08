@@ -24,8 +24,11 @@ def Eozea_time() -> int:
 
 
 # 导入采集时钟
-clock = pd.read_csv(r"C:\Users\chy19\OneDrive\FF14\6.0\1.csv", encoding='UTF-8-sig')
-# select_0 = clock[clock['开始ET']==0].head()
+try:
+    clock = pd.read_csv(r".\list.csv", encoding='UTF-8-sig')
+    # select_0 = clock[clock['开始ET']==0].head()
+except:
+    print("list.csv丢失，请把压缩包全部解压后使用！")
 
 choose_dict = {
     0: "",
