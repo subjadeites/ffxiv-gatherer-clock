@@ -101,12 +101,15 @@ def choose_func_more() -> list:
 
 
 def func_select(func) -> str:
-    result = "& ("
-    for k in func:
-        result += (choose_dict.get(k) + "|")
-    if result[-1:] == "|":
-        result = result[:-1] + ")"
-    return result
+    if func ==[0]:
+        return ""
+    else:
+        result = "& ("
+        for k in func:
+            result += (choose_dict.get(k) + "|")
+        if result[-1:] == "|":
+            result = result[:-1] + ")"
+        return result
 
 
 def choose_ZhiYe():
