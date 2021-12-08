@@ -115,12 +115,12 @@ def choose_ZhiYe():
         choose_in = int(choose_in)
         if choose_in in [0, 1, 2]:
             return choose_in
-        elif choose_in == "":
-            return 0
         else:
             print("非以上选项，请重新输入！")
             choose_ZhiYe()
     except:
+        if choose_in == "":
+            return 0
         print("非以上选项，请重新输入！")
         choose_ZhiYe()
 
@@ -157,7 +157,7 @@ def choose_tts():
             choose_tts()
     except:
         if choose_in == "":
-            return 90
+            return True
         else:
             print("非以上选项，请重新输入！")
             choose_tts()
@@ -217,9 +217,13 @@ if __name__ == '__main__':
             print("================")
             temp_next_clock_time = clock_out(now_eozea_hour, result_tts, result_func, result_ZhiYe, result_lvl)
             last_clock_time = temp_next_clock_time
-            if result_func == 3:
-                if (last_clock_time % 4) == 0:
+            if (len(result_func) == 1 and 3 in result_func) or result_tts is True:
+                if (last_clock_time % 4) != 0:
+                    pass
+                elif result_tts is True:
                     pass
                 else:
                     spk.Speak("时限已刷新！")
+            else:
+                spk.Speak("时限已刷新！")
         time.sleep(3)
