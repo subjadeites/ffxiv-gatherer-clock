@@ -294,10 +294,10 @@ NGA发布地址：https://bbs.nga.cn/read.php?tid=29755989&
     print("请根据提示输入是否需要TTS。")
     print("0：不需要，1：需要，不输入默认为需要。")
     result_tts = choose_tts()
-    next_clock_time = 0
+    next_clock_time = -1
     while True:
-        now_eozea_hour = Eozea_time()
-        if now_eozea_hour >= next_clock_time:
+        now_eozea_hour = 23
+        if now_eozea_hour >= next_clock_time and ((now_eozea_hour!=22 or now_eozea_hour!= 23 )and next_clock_time !=0):
             print("================")
             print("时限已经刷新！")
             print("绿字为当前时段时限,白字为下时段预告。")
