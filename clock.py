@@ -1,18 +1,16 @@
 # !/usr/bin/env python
 # -*- coding: utf-8 -*-
-# @Time    : 2021/12/10 10:30
-# @Version : 0.2.4
+# @Time    : 2021/12/10 16:30
+# @Version : 0.3.0
 # @Author  : subjadeites
 # @File    : clock.py
-import os
-import sys
-
-version = "0.2.4"
+version = "0.3.0"
 if __name__ == '__main__':
     print("""================
 正在初始化依赖与环境...
 ================""")
-
+import os
+import sys
 import datetime
 import time
 
@@ -30,24 +28,55 @@ def Eozea_time() -> int:
     return eozea_hour
 
 
-def clock_out(eozea_time_in, need_tts, func, ZhiYe, lvl) -> int:
+def clock_out(lang, eozea_time_in, need_tts, func, ZhiYe, lvl) -> int:
+    # 换日
+    if eozea_time_in == 22 or eozea_time_in == 23:
+        next_start_time = 0
+    elif (eozea_time_in % 2) == 0:
+        next_start_time = eozea_time_in + 2
+    else:
+        next_start_time = eozea_time_in + 1
+    # 当前ET刷新
     out_list = [["材料名", "等级", "职能", "类型", "地区", "靠近水晶", "开始ET", "结束ET"], ]
     select = "(clock['开始ET'] <= eozea_time_in) & (clock['结束ET'] > eozea_time_in)" + func_select(
         func) + choose_ZhiYe_dict.get(
         ZhiYe) + "& (clock['等级'] <= " + str(lvl) + ")"
     clock_found = clock[eval(select)].head(None)
-    if len(clock_found) == 0:
-        if (eozea_time_in % 2) == 0:
-            return eozea_time_in + 2
-        else:
-            return eozea_time_in + 1
+    # 这部分是用于预告下一次刷新的代码
+    out_list_next = [["材料名", "等级", "职能", "类型", "地区", "靠近水晶", "开始ET", "结束ET"], ]
+    select_next = "(clock['开始ET'] <= next_start_time) & (clock['结束ET'] > next_start_time)" + func_select(
+        func) + choose_ZhiYe_dict.get(
+        ZhiYe) + "& (clock['等级'] <= " + str(lvl) + ")"
+    clock_found_next = clock[eval(select_next)].head(None)
+    # 如果本时段和下个时段都没有结果，那么直接返回
+    if len(clock_found) == 0 and len(clock_found_next) == 0:
+        print("当前时段无筛选条件下结果！")
+        print("下个时段无筛选条件下结果！")
+        return next_start_time
     else:
         for i in range(0, len(clock_found)):
-            temp_out_list = [clock_found.iloc[i]['材料名'], clock_found.iloc[i]['等级'], clock_found.iloc[i]['职能'],
+            temp_out_list = [clock_found.iloc[i]['材料名' + lang], clock_found.iloc[i]['等级'], clock_found.iloc[i]['职能'],
                              clock_found.iloc[i]['类型'], clock_found.iloc[i]['地区'], clock_found.iloc[i]['靠近水晶'],
                              clock_found.iloc[i]['开始ET'], clock_found.iloc[i]['结束ET']]
             out_list.append(temp_out_list)
-        print(AsciiTable(out_list).table)
+        # region 这部分是用于预告下一次刷新的代码
+        for i in range(0, len(clock_found_next)):
+            temp_out_list_2 = [clock_found_next.iloc[i]['材料名' + lang], clock_found_next.iloc[i]['等级'],
+                                 clock_found_next.iloc[i]['职能'],
+                                 clock_found_next.iloc[i]['类型'], clock_found_next.iloc[i]['地区'], clock_found_next.iloc[i]['靠近水晶'],
+                                 clock_found_next.iloc[i]['开始ET'], clock_found_next.iloc[i]['结束ET']]
+            out_list_next.append(temp_out_list_2)
+        # endregion
+        # 格式化输出
+        if len(clock_found) == 0 :
+            print("当前时段无筛选条件下结果！")
+            print(AsciiTable(out_list_next).table)
+
+        elif len(clock_found_next) == 0:
+            print("\033[0;32;40m" + AsciiTable(out_list).table + "\033[0m\n")
+            print("下个时段无筛选条件下结果！")
+        else:
+            print("\033[0;32;40m" + AsciiTable(out_list).table + "\033[0m\n" + AsciiTable(out_list_next).table)
         if need_tts is True:
             for i in range(1, len(out_list)):
                 spk.Speak(out_list[i][0])
@@ -56,7 +85,30 @@ def clock_out(eozea_time_in, need_tts, func, ZhiYe, lvl) -> int:
                 spk.Speak(out_list[i][3])
                 spk.Speak(out_list[i][4])
                 spk.Speak(out_list[i][5])
-        return clock_found.iloc[0]['结束ET']
+        if len(clock_found_next) > 0:
+            spk.Speak("已为您更新下个时段预告")
+        elif len(clock_found_next) ==0:
+            spk.Speak("下个时段无筛选条件下结果")
+        return next_start_time
+
+
+def choose_lang():
+    choose_in = input("请输入客户端语言版本：")
+    try:
+        choose_in = int(choose_in)
+        if choose_in == 0:
+            return "JP"
+        elif choose_in == 1:
+            return "EN"
+        else:
+            print("非以上选项，请重新输入！")
+            choose_lang()
+    except:
+        if choose_in == "":
+            return "JP"
+        else:
+            print("非以上选项，请重新输入！")
+            choose_lang()
 
 
 def choose_func():
@@ -78,6 +130,8 @@ def choose_func():
             print("非以上选项，请重新输入！")
             choose_func()
     except:
+        if choose_in =="":
+            return [0]
         print("非以上选项，请重新输入！")
         choose_func()
 
@@ -174,6 +228,7 @@ def choose_tts():
             print("非以上选项，请重新输入！")
             choose_tts()
 
+
 # 用于打包单文件，不再依赖额外CSV
 def resource_path(relative_path):
     try:
@@ -183,6 +238,7 @@ def resource_path(relative_path):
         base_path = os.path.abspath(".")
 
     return os.path.join(base_path, relative_path)
+
 
 if __name__ == '__main__':
 
@@ -200,8 +256,8 @@ if __name__ == '__main__':
 
     choose_dict = {
         0: "",
-        1: " ((clock['等级'] < 90) & (clock['类型'] == '收藏品'))",
-        2: " ((clock['等级'] == 90) & (clock['类型'] == '收藏品'))",
+        1: " (clock['类型'] == '白票收藏品')",
+        2: " (clock['类型'] == '紫票收藏品')",
         3: " ((clock['类型'] == '精选晓月灵砂') | (clock['类型'] == '精选巨树灵砂') | (clock['类型'] == '精选巨岩灵砂'))",
         4: " (clock['类型'] == '传说')",
         5: " (clock['类型'] == '传说1星')",
@@ -219,8 +275,12 @@ if __name__ == '__main__':
 NGA发布地址：https://bbs.nga.cn/read.php?tid=29755989&
 如果遇到BUG，或者有好的功能建议，可以通过上述渠道反馈
 ================
+请根据提示选择客户端语言版本
+0：日语、1：英语。不输入则默认为日语""")
+    result_lang = choose_lang()
+    print("""================
 请根据提示输入需要提醒的采集点种类。
-0：全部，1：自行多选""".format(version))
+0：全部，1：自行筛选，不输入默认全部""".format(version))
     result_func = choose_func()
     print("请根据提示输入需要提醒的职业。")
     print("0：全部，1：采掘，2：园艺，不输入默认全部。")
@@ -233,13 +293,12 @@ NGA发布地址：https://bbs.nga.cn/read.php?tid=29755989&
     next_clock_time = 0
     while True:
         now_eozea_hour = Eozea_time()
-        if now_eozea_hour == 0 and next_clock_time == 24:
-            next_clock_time = 0
         if now_eozea_hour >= next_clock_time:
             print("================")
             print("时限已经刷新！")
+            print("绿字为当前时段时限,白字为下时段预告。")
             print("================")
-            next_clock_time = clock_out(now_eozea_hour, result_tts, result_func, result_ZhiYe, result_lvl)
+            next_clock_time = clock_out(result_lang, now_eozea_hour, result_tts, result_func, result_ZhiYe, result_lvl)
             if (len(result_func) == 1 and 3 in result_func) or result_tts is True:
                 if (next_clock_time % 4) != 0:
                     pass
