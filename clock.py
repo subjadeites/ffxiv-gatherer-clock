@@ -297,7 +297,9 @@ NGA发布地址：https://bbs.nga.cn/read.php?tid=29755989&
     next_clock_time = -1
     while True:
         now_eozea_hour = Eozea_time()
-        if now_eozea_hour >= next_clock_time and ((now_eozea_hour!=22 or now_eozea_hour!= 23 )and next_clock_time !=0):
+        if (now_eozea_hour == 22 or now_eozea_hour == 23) and next_clock_time == 0:
+            pass
+        elif now_eozea_hour >= next_clock_time:
             print("================")
             print("时限已经刷新！")
             print("绿字为当前时段时限,白字为下时段预告。")
