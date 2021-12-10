@@ -9,14 +9,17 @@ if __name__ == '__main__':
     print("""================
 正在初始化依赖与环境...
 ================""")
+import datetime
 import os
 import sys
-import datetime
 import time
 
 import pandas as pd
 import win32com.client
+from colorama import init
 from terminaltables import AsciiTable
+
+init(autoreset=True)
 
 
 # 计算ET
@@ -62,13 +65,14 @@ def clock_out(lang, eozea_time_in, need_tts, func, ZhiYe, lvl) -> int:
         # region 这部分是用于预告下一次刷新的代码
         for i in range(0, len(clock_found_next)):
             temp_out_list_2 = [clock_found_next.iloc[i]['材料名' + lang], clock_found_next.iloc[i]['等级'],
-                                 clock_found_next.iloc[i]['职能'],
-                                 clock_found_next.iloc[i]['类型'], clock_found_next.iloc[i]['地区'], clock_found_next.iloc[i]['靠近水晶'],
-                                 clock_found_next.iloc[i]['开始ET'], clock_found_next.iloc[i]['结束ET']]
+                               clock_found_next.iloc[i]['职能'],
+                               clock_found_next.iloc[i]['类型'], clock_found_next.iloc[i]['地区'],
+                               clock_found_next.iloc[i]['靠近水晶'],
+                               clock_found_next.iloc[i]['开始ET'], clock_found_next.iloc[i]['结束ET']]
             out_list_next.append(temp_out_list_2)
         # endregion
         # 格式化输出
-        if len(clock_found) == 0 :
+        if len(clock_found) == 0:
             print("当前时段无筛选条件下结果！")
             print(AsciiTable(out_list_next).table)
 
@@ -87,7 +91,7 @@ def clock_out(lang, eozea_time_in, need_tts, func, ZhiYe, lvl) -> int:
                 spk.Speak(out_list[i][5])
         if len(clock_found_next) > 0:
             spk.Speak("已为您更新下个时段预告")
-        elif len(clock_found_next) ==0:
+        elif len(clock_found_next) == 0:
             spk.Speak("下个时段无筛选条件下结果")
         return next_start_time
 
@@ -130,7 +134,7 @@ def choose_func():
             print("非以上选项，请重新输入！")
             choose_func()
     except:
-        if choose_in =="":
+        if choose_in == "":
             return [0]
         print("非以上选项，请重新输入！")
         choose_func()
@@ -270,13 +274,13 @@ if __name__ == '__main__':
     }
     print("""欢迎使用原生态手搓纯天然本地采集时钟！
 当前程序版本：{0}
-当前数据版本：国际服6.0
+当前数据版本：仅国际服6.0，已支持E端物品名
 开源地址：https://github.com/subjadeites/ffxiv-gatherer-clock
 NGA发布地址：https://bbs.nga.cn/read.php?tid=29755989&
 如果遇到BUG，或者有好的功能建议，可以通过上述渠道反馈
 ================
 请根据提示选择客户端语言版本
-0：日语、1：英语。不输入则默认为日语""")
+0：日语、1：英语。不输入则默认为日语""".format(version))
     result_lang = choose_lang()
     print("""================
 请根据提示输入需要提醒的采集点种类。
