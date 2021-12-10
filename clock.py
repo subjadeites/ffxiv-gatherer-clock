@@ -1,9 +1,18 @@
 # !/usr/bin/env python
 # -*- coding: utf-8 -*-
-# @Time    : 2021/12/8 17:30
-# @Version : 0.1.1
+# @Time    : 2021/12/10 10:30
+# @Version : 0.2.4
 # @Author  : subjadeites
 # @File    : clock.py
+import os
+import sys
+
+version = "0.2.4"
+if __name__ == '__main__':
+    print("""================
+正在初始化依赖与环境...
+================""")
+
 import datetime
 import time
 
@@ -26,7 +35,7 @@ def clock_out(eozea_time_in, need_tts, func, ZhiYe, lvl) -> int:
     select = "(clock['开始ET'] <= eozea_time_in) & (clock['结束ET'] > eozea_time_in)" + func_select(
         func) + choose_ZhiYe_dict.get(
         ZhiYe) + "& (clock['等级'] <= " + str(lvl) + ")"
-    clock_found = clock[eval(select)].head()
+    clock_found = clock[eval(select)].head(None)
     if len(clock_found) == 0:
         if (eozea_time_in % 2) == 0:
             return eozea_time_in + 2
@@ -101,7 +110,7 @@ def choose_func_more() -> list:
 
 
 def func_select(func) -> str:
-    if func ==[0]:
+    if func == [0]:
         return ""
     else:
         result = "& ("
@@ -165,9 +174,17 @@ def choose_tts():
             print("非以上选项，请重新输入！")
             choose_tts()
 
+# 用于打包单文件，不再依赖额外CSV
+def resource_path(relative_path):
+    try:
+        # PyInstaller creates a temp folder and stores path in _MEIPASS
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
 
 if __name__ == '__main__':
-    print("正在初始化依赖与环境")
 
     # 导入系统tts
     spk = win32com.client.Dispatch("SAPI.SpVoice")
@@ -175,7 +192,8 @@ if __name__ == '__main__':
 
     # 导入采集时钟
     try:
-        clock = pd.read_csv(r".\list.csv", encoding='UTF-8-sig')
+        clock = pd.read_csv(resource_path("list.csv"), encoding='UTF-8-sig')
+        pd.set_option('display.max_rows', None)
         # select_0 = clock[clock['开始ET']==0].head()
     except:
         print("list.csv丢失，请把压缩包全部解压后使用！")
@@ -194,12 +212,15 @@ if __name__ == '__main__':
         1: "& (clock['职能'] == '采掘')",
         2: "& (clock['园艺'] == '采掘')",
     }
-
-    print("欢迎使用原生态手搓纯天然本地采集时钟！")
-    print("当前程序版本：0.1.0")
-    print("当前数据版本：国际服6.0")
-    print("请根据提示输入需要提醒的采集点种类。")
-    print("0：全部，1：自行多选")
+    print("""欢迎使用原生态手搓纯天然本地采集时钟！
+当前程序版本：{0}
+当前数据版本：国际服6.0
+开源地址：https://github.com/subjadeites/ffxiv-gatherer-clock
+NGA发布地址：https://bbs.nga.cn/read.php?tid=29755989&
+如果遇到BUG，或者有好的功能建议，可以通过上述渠道反馈
+================
+请根据提示输入需要提醒的采集点种类。
+0：全部，1：自行多选""".format(version))
     result_func = choose_func()
     print("请根据提示输入需要提醒的职业。")
     print("0：全部，1：采掘，2：园艺，不输入默认全部。")
@@ -209,19 +230,18 @@ if __name__ == '__main__':
     print("请根据提示输入是否需要TTS。")
     print("0：不需要，1：需要，不输入默认为需要。")
     result_tts = choose_tts()
-    last_clock_time = 0
+    next_clock_time = 0
     while True:
         now_eozea_hour = Eozea_time()
-        if now_eozea_hour == 0 and last_clock_time == 24:
-            last_clock_time = 0
-        if now_eozea_hour >= last_clock_time:
+        if now_eozea_hour == 0 and next_clock_time == 24:
+            next_clock_time = 0
+        if now_eozea_hour >= next_clock_time:
             print("================")
             print("时限已经刷新！")
             print("================")
-            temp_next_clock_time = clock_out(now_eozea_hour, result_tts, result_func, result_ZhiYe, result_lvl)
-            last_clock_time = temp_next_clock_time
+            next_clock_time = clock_out(now_eozea_hour, result_tts, result_func, result_ZhiYe, result_lvl)
             if (len(result_func) == 1 and 3 in result_func) or result_tts is True:
-                if (last_clock_time % 4) != 0:
+                if (next_clock_time % 4) != 0:
                     pass
                 elif result_tts is True:
                     pass
