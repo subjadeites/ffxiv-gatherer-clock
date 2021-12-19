@@ -1,3 +1,4 @@
 pandas
 pypiwin32
 terminaltables
+wxpython
