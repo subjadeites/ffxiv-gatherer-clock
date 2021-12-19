@@ -23,25 +23,25 @@ init(autoreset=True)
 
 
 # 计算ET
-def Eozea_time() -> int:
+def Eorzea_time() -> int:
     temp_time = datetime.datetime.utcfromtimestamp((time.time() * 1440 / 70) % 86400)
-    eozea_hour = int(temp_time.strftime("%H"))
-    eozea_min = int(temp_time.strftime("%M"))
-    # return [eozea_hour, eozea_min]
-    return eozea_hour
+    Eorzea_hour = int(temp_time.strftime("%H"))
+    Eorzea_min = int(temp_time.strftime("%M"))
+    # return [Eorzea_hour, Eorzea_min]
+    return Eorzea_hour
 
 
-def clock_out(lang, eozea_time_in, need_tts, func, ZhiYe, lvl) -> int:
+def clock_out(lang, Eorzea_time_in, need_tts, func, ZhiYe, lvl) -> int:
     # 换日
-    if eozea_time_in == 22 or eozea_time_in == 23:
+    if Eorzea_time_in == 22 or Eorzea_time_in == 23:
         next_start_time = 0
-    elif (eozea_time_in % 2) == 0:
-        next_start_time = eozea_time_in + 2
+    elif (Eorzea_time_in % 2) == 0:
+        next_start_time = Eorzea_time_in + 2
     else:
-        next_start_time = eozea_time_in + 1
+        next_start_time = Eorzea_time_in + 1
     # 当前ET刷新
     out_list = [["材料名", "等级", "职能", "类型", "地区", "靠近水晶", "开始ET", "结束ET"], ]
-    select = "(clock['开始ET'] <= eozea_time_in) & (clock['结束ET'] > eozea_time_in)" + func_select(
+    select = "(clock['开始ET'] <= Eorzea_time_in) & (clock['结束ET'] > Eorzea_time_in)" + func_select(
         func) + choose_ZhiYe_dict.get(
         ZhiYe) + "& (clock['等级'] <= " + str(lvl) + ")"
     clock_found = clock[eval(select)].head(None)
@@ -296,15 +296,15 @@ NGA发布地址：https://bbs.nga.cn/read.php?tid=29755989&
     result_tts = choose_tts()
     next_clock_time = -1
     while True:
-        now_eozea_hour = Eozea_time()
-        if (now_eozea_hour == 22 or now_eozea_hour == 23) and next_clock_time == 0:
+        now_Eorzea_hour = Eozea_time()
+        if (now_Eorzea_hour == 22 or now_Eorzea_hour == 23) and next_clock_time == 0:
             pass
-        elif now_eozea_hour >= next_clock_time:
+        elif now_Eorzea_hour >= next_clock_time:
             print("================")
             print("时限已经刷新！")
             print("绿字为当前时段时限,白字为下时段预告。")
             print("================")
-            next_clock_time = clock_out(result_lang, now_eozea_hour, result_tts, result_func, result_ZhiYe, result_lvl)
+            next_clock_time = clock_out(result_lang, now_Eorzea_hour, result_tts, result_func, result_ZhiYe, result_lvl)
             if (len(result_func) == 1 and 3 in result_func) or result_tts is True:
                 if (next_clock_time % 4) != 0:
                     pass
