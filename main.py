@@ -12,7 +12,6 @@ from threading import Thread
 import pandas as pd
 import win32com.client
 import wx
-from terminaltables import AsciiTable
 
 version = "1.0.0 beta"
 
@@ -47,57 +46,100 @@ def clock_out(lang, Eorzea_time_in, need_tts, func, ZhiYe, lvl_min, lvl_max) -> 
     else:
         next_start_time = Eorzea_time_in + 1
     # 当前ET刷新
-    out_list = [["材料名", "等级", "职能", "类型", "地区", "靠近水晶", "开始ET", "结束ET"], ]
+    out_list = []
     select = "(clock['开始ET'] <= Eorzea_time_in) & (clock['结束ET'] > Eorzea_time_in)" + func_select(
         func) + choose_ZhiYe_dict.get(
         ZhiYe) + "& (clock['等级'] <= " + str(lvl_max) + ")" + "& (clock['等级'] >= " + str(lvl_min) + ")"
     clock_found = clock[eval(select)].head(None)
     # 这部分是用于预告下一次刷新的代码
-    out_list_next = [["材料名", "等级", "职能", "类型", "地区", "靠近水晶", "开始ET", "结束ET"], ]
+    out_list_next = []
     select_next = "(clock['开始ET'] <= next_start_time) & (clock['结束ET'] > next_start_time)" + func_select(
         func) + choose_ZhiYe_dict.get(
         ZhiYe) + "& (clock['等级'] <= " + str(lvl_max) + ")" + "& (clock['等级'] >= " + str(lvl_min) + ")"
     clock_found_next = clock[eval(select_next)].head(None)
     # 如果本时段和下个时段都没有结果，那么直接返回
     if len(clock_found) == 0 and len(clock_found_next) == 0:
-        frame.result_box.SetLabel(label="\n\n\n当前时段无筛选条件下结果！")
-        # print("当前时段无筛选条件下结果！")
-        frame.result_box_next.SetLabel(label="\n\n\n下个时段无筛选条件下结果！")
-        # print("下个时段无筛选条件下结果！")
+        frame.img_ctrl.Show(False)  # 关闭图片窗体显示
+        frame.out_listctrl.DeleteAllItems()
+        frame.out_listctrl.InsertItem(0, '当前时段无筛选条件下结果！')
+        frame.out_listctrl_next.InsertItem(0, '当前时段无筛选条件下结果！')
         return next_start_time
     else:
+        frame.img_ctrl.Show(False)  # 关闭图片窗体显示
         for i in range(0, len(clock_found)):
-            temp_out_list = [clock_found.iloc[i]['材料名' + lang], clock_found.iloc[i]['等级'], clock_found.iloc[i]['职能'],
+            temp_out_list = [clock_found.iloc[i]['材料名' + lang], str(clock_found.iloc[i]['等级']),
+                             clock_found.iloc[i]['职能'],
                              clock_found.iloc[i]['类型'], clock_found.iloc[i]['地区'], clock_found.iloc[i]['靠近水晶'],
-                             clock_found.iloc[i]['开始ET'], clock_found.iloc[i]['结束ET']]
+                             str(clock_found.iloc[i]['开始ET']), str(clock_found.iloc[i]['结束ET'])]
             out_list.append(temp_out_list)
         # region 这部分是用于预告下一次刷新的代码
         for i in range(0, len(clock_found_next)):
-            temp_out_list_2 = [clock_found_next.iloc[i]['材料名' + lang], clock_found_next.iloc[i]['等级'],
+            temp_out_list_2 = [clock_found_next.iloc[i]['材料名' + lang], str(clock_found_next.iloc[i]['等级']),
                                clock_found_next.iloc[i]['职能'],
                                clock_found_next.iloc[i]['类型'], clock_found_next.iloc[i]['地区'],
                                clock_found_next.iloc[i]['靠近水晶'],
-                               clock_found_next.iloc[i]['开始ET'], clock_found_next.iloc[i]['结束ET']]
+                               str(clock_found_next.iloc[i]['开始ET']), str(clock_found_next.iloc[i]['结束ET'])]
             out_list_next.append(temp_out_list_2)
         # endregion
         # 格式化输出
         if len(clock_found) == 0:
-            frame.result_box.SetLabel(label="\n\n\n当前时段无筛选条件下结果！")
-            # print("当前时段无筛选条件下结果！")
-            # print(AsciiTable(out_list_next).table)
-            frame.result_box_next.SetLabel(label=AsciiTable(out_list_next).table)
-
+            frame.out_listctrl.DeleteAllItems()
+            frame.out_listctrl_next.DeleteAllItems()
+            frame.out_listctrl.InsertItem(0, '当前时段无筛选条件下结果！')
+            i = 0
+            for v in out_list_next:
+                index = frame.out_listctrl_next.InsertItem(i, v[0])
+                frame.out_listctrl_next.SetItem(index, 1, v[1])
+                frame.out_listctrl_next.SetItem(index, 2, v[2])
+                frame.out_listctrl_next.SetItem(index, 3, v[3])
+                frame.out_listctrl_next.SetItem(index, 4, v[4])
+                frame.out_listctrl_next.SetItem(index, 5, v[5])
+                frame.out_listctrl_next.SetItem(index, 6, v[6])
+                frame.out_listctrl_next.SetItem(index, 7, v[7])
+                i += 1
         elif len(clock_found_next) == 0:
-            frame.result_box.SetLabel(label=AsciiTable(out_list_next).table)
-            # print("\033[0;32;40m" + AsciiTable(out_list).table + "\033[0m\n")
-            frame.result_box_next.SetLabel(label="\n\n\n下个时段无筛选条件下结果！")
-            # print("下个时段无筛选条件下结果！")
+            frame.out_listctrl.DeleteAllItems()
+            frame.out_listctrl_next.DeleteAllItems()
+            i = 0
+            for v in out_list:
+                index = frame.out_listctrl.InsertItem(i, v[0])
+                frame.out_listctrl.SetItem(index, 1, v[1])
+                frame.out_listctrl.SetItem(index, 2, v[2])
+                frame.out_listctrl.SetItem(index, 3, v[3])
+                frame.out_listctrl.SetItem(index, 4, v[4])
+                frame.out_listctrl.SetItem(index, 5, v[5])
+                frame.out_listctrl.SetItem(index, 6, v[6])
+                frame.out_listctrl.SetItem(index, 7, v[7])
+                i += 1
+            frame.out_listctrl_next.InsertItem(0, '当前时段无筛选条件下结果！')
         else:
-            # print("\033[0;32;40m" + AsciiTable(out_list).table + "\033[0m\n" + AsciiTable(out_list_next).table)
-            frame.result_box.SetLabel(label=AsciiTable(out_list).table)
-            frame.result_box_next.SetLabel(label=AsciiTable(out_list_next).table)
+            frame.out_listctrl.DeleteAllItems()
+            frame.out_listctrl_next.DeleteAllItems()
+            i = 0
+            for v in out_list:
+                index = frame.out_listctrl.InsertItem(i, v[0])
+                frame.out_listctrl.SetItem(index, 1, v[1])
+                frame.out_listctrl.SetItem(index, 2, v[2])
+                frame.out_listctrl.SetItem(index, 3, v[3])
+                frame.out_listctrl.SetItem(index, 4, v[4])
+                frame.out_listctrl.SetItem(index, 5, v[5])
+                frame.out_listctrl.SetItem(index, 6, v[6])
+                frame.out_listctrl.SetItem(index, 7, v[7])
+                i += 1
+            i = 0
+            for v in out_list_next:
+                index = frame.out_listctrl_next.InsertItem(i, v[0])
+                frame.out_listctrl_next.SetItem(index, 1, v[1])
+                frame.out_listctrl_next.SetItem(index, 2, v[2])
+                frame.out_listctrl_next.SetItem(index, 3, v[3])
+                frame.out_listctrl_next.SetItem(index, 4, v[4])
+                frame.out_listctrl_next.SetItem(index, 5, v[5])
+                frame.out_listctrl_next.SetItem(index, 6, v[6])
+                frame.out_listctrl_next.SetItem(index, 7, v[7])
+                i += 1
+
         if need_tts is True:
-            for i in range(1, len(out_list)):
+            for i in range(0, len(out_list)):
                 spk.Speak(out_list[i][0])
                 spk.Speak((str(out_list[i][1]) + "级"))
                 spk.Speak(out_list[i][2])
@@ -140,7 +182,11 @@ class Clock_Thread(Thread):
         while True:
             if self.is_run is False:
                 frame.button_run.Enable()
-                frame.result_box_text.Show(False)
+                frame.result_box_text.Show(True)
+                frame.result_box_text_1.Show(False)
+                frame.result_box_text_2.Show(False)
+                frame.out_listctrl.Show(False)
+                frame.out_listctrl_next.Show(False)
                 globals()['clock_thread'] = Clock_Thread()
                 break
             else:
@@ -195,7 +241,7 @@ class MainWindow(wx.Frame):
         menuBar = wx.MenuBar()
         menuBar.Append(filemenu, "文件")
         self.SetMenuBar(menuBar)
-
+        # 设置ET时钟
         self.Eorzea_clock_out_text = wx.StaticText(self.main_frame, size=(110, 20), pos=(1280 - 170, 5),
                                                    label="ET时钟：", name='staticText',
                                                    style=2321)
@@ -208,7 +254,7 @@ class MainWindow(wx.Frame):
         self.Eorzea_clock = wx.Timer(self)
         self.Bind(wx.EVT_TIMER, self.Eorzea_time, self.Eorzea_clock)
         self.Eorzea_clock.Start(300)
-
+        # 设置settings
         self.choose_lang = wx.RadioBox(self.main_frame, -1, "选择语言", (10, 10), wx.DefaultSize,
                                        ['日语JP', '英语EN'], 2, wx.RA_SPECIFY_COLS)
         self.choose_TTS = wx.RadioBox(self.main_frame, -1, "是否开启TTS", (150, 10), wx.DefaultSize,
@@ -216,14 +262,14 @@ class MainWindow(wx.Frame):
 
         self.choose_ZhiYe = wx.RadioBox(self.main_frame, -1, "选择职业", (10, 70), wx.DefaultSize,
                                         ['全部', '采掘', '园艺'], 3, wx.RA_SPECIFY_COLS)
-
+        # 设置时限点筛选多选框
         choose_func_text = wx.StaticText(self.main_frame, label='请选择需要提醒的采集点种类：', pos=(10, 140))
         self.choose_func_1 = wx.CheckBox(self.main_frame, 91, "白票收藏品", pos=(180, 140))
         self.choose_func_2 = wx.CheckBox(self.main_frame, 92, "紫票收藏品", pos=(270, 140))
         self.choose_func_3 = wx.CheckBox(self.main_frame, 93, "精选灵砂", pos=(360, 140))
         self.choose_func_4 = wx.CheckBox(self.main_frame, 94, "普通传说点", pos=(450, 140))
         self.choose_func_5 = wx.CheckBox(self.main_frame, 95, "1星传说点", pos=(540, 140))
-
+        # 设置等级上下限输入框
         choose_lvl_text = wx.StaticText(self.main_frame, label='请选择等级区间：', pos=(10, 170))
         self.lvl_min = wx.SpinCtrl(self.main_frame, size=(45, 20), pos=(110, 170), name='wxSpinCtrl', min=0, max=90,
                                    initial=80, style=0)
@@ -232,35 +278,66 @@ class MainWindow(wx.Frame):
         self.lvl_max = wx.SpinCtrl(self.main_frame, size=(45, 20), pos=(170, 170), name='wxSpinCtrl', min=0, max=90,
                                    initial=90, style=0)
         self.lvl_max.Bind(wx.EVT_SPINCTRL, self.lvl_check)
-
+        # 设置启动和停止按钮
         self.button_run = wx.Button(self.main_frame, -1, "设定完毕，开启闹钟", pos=(10, 200))
         self.Bind(wx.EVT_BUTTON, self.OnClick_run, self.button_run)
         self.button_stop = wx.Button(self.main_frame, -1, "取消闹钟/重新设定", pos=(150, 200))
         self.button_stop.Disable()
         self.Bind(wx.EVT_BUTTON, self.OnClick_stop, self.button_stop)
-
-        self.result_box_text_1 = wx.StaticText(self.main_frame, size=(880, 20), pos=(10, 240),
+        # 设置当前时段时限提示
+        self.result_box_text_1 = wx.StaticText(self.main_frame, size=(720, 20), pos=(10, 240),
                                                label="=========当前时段时限点位=========", name='staticText_result',
                                                style=2321)
         self.result_box_text_1.Show(False)
+        # 创建当前时段采集时钟控件
+        self.out_listctrl = wx.ListCtrl(self.main_frame, wx.ID_ANY, style=wx.LC_REPORT, pos=(10, 260), size=(720, -1))
+        self.out_listctrl.Show(False)
+        self.out_listctrl.InsertColumn(0, '材料名', width=250)
+        self.out_listctrl.InsertColumn(1, '等级', width=60)
+        self.out_listctrl.InsertColumn(2, '职能', width=60)
+        self.out_listctrl.InsertColumn(3, '类型', width=90)
+        self.out_listctrl.InsertColumn(4, '地区', width=80)
+        self.out_listctrl.InsertColumn(5, '靠近水晶', width=80)
+        self.out_listctrl.InsertColumn(6, '开始ET', width=50)
+        self.out_listctrl.InsertColumn(7, '结束ET', width=50)
+        self.Bind(wx.EVT_LIST_ITEM_SELECTED, self.click_line_in_list, self.out_listctrl)
+        """# region 1.0.0beta版本临时显示方案
         self.result_box_text_1.SetFont(wx.Font(11, 74, 90, 400, False, 'Microsoft YaHei UI', 28))
         self.result_box = wx.StaticText(self.main_frame, size=(880, 200), pos=(10, 260),
                                         label="", name='staticText_result',
                                         style=17)
         self.result_box.SetFont(wx.Font(11, 75, 90, 400, False, '新宋体', 28))
-        self.result_box_text_2 = wx.StaticText(self.main_frame, size=(880, 20), pos=(10, 460),
+        # endregion"""
+        self.result_box_text_2 = wx.StaticText(self.main_frame, size=(720, 20), pos=(10, 460),
                                                label="=========下个时段时限点位=========", name='staticText_result',
                                                style=2321)
         self.result_box_text_2.Show(False)
+        # 创建下一时段采集时钟控件
+        self.out_listctrl_next = wx.ListCtrl(self.main_frame, wx.ID_ANY, style=wx.LC_REPORT, pos=(10, 480),
+                                             size=(720, -1))
+        self.out_listctrl_next.Show(False)
+        self.out_listctrl_next.InsertColumn(0, '材料名', width=250)
+        self.out_listctrl_next.InsertColumn(1, '等级', width=60)
+        self.out_listctrl_next.InsertColumn(2, '职能', width=60)
+        self.out_listctrl_next.InsertColumn(3, '类型', width=90)
+        self.out_listctrl_next.InsertColumn(4, '地区', width=80)
+        self.out_listctrl_next.InsertColumn(5, '靠近水晶', width=80)
+        self.out_listctrl_next.InsertColumn(6, '开始ET', width=50)
+        self.out_listctrl_next.InsertColumn(7, '结束ET', width=50)
+        self.Bind(wx.EVT_LIST_ITEM_SELECTED, self.click_line_in_list_next, self.out_listctrl_next)
+        """# region 1.0.0beta版本临时显示方案
         self.result_box_text_2.SetFont(wx.Font(11, 74, 90, 400, False, 'Microsoft YaHei UI', 28))
         self.result_box_next = wx.StaticText(self.main_frame, size=(880, 200), pos=(10, 480),
                                              label="", name='staticText_result',
                                              style=17)
         self.result_box_next.SetFont(wx.Font(11, 75, 90, 400, False, '新宋体', 28))
-
-        self.result_box_text = wx.StaticText(self.main_frame, size=(720, 20), pos=(10, 440),
+        # endregion"""
+        # 用于在刚打开程序的时候显示提示，需要位于最上层
+        self.result_box_text = wx.StaticText(self.main_frame, size=(720, 40), pos=(10, 440),
                                              label="当前无采集点提示\n请在上方设置后点击开启闹钟", name='staticText_result',
                                              style=2321)
+        self.img_ctrl = wx.StaticBitmap(self.main_frame, size=(500, 500), pos=(750, 130), name='staticBitmap', style=0)
+        self.img_ctrl.Show(False)
 
         self.Centre()
 
@@ -277,13 +354,15 @@ class MainWindow(wx.Frame):
         exit()
         self.Close(True)  # 关闭整个frame
 
+    # ET时钟定时事件
     def Eorzea_time(self, event):
         temp_time = datetime.datetime.utcfromtimestamp((time.time() * 1440 / 70) % 86400)
-        Eorzea_hour = int(temp_time.strftime("%H"))
-        Eorzea_min = int(temp_time.strftime("%M"))
-        Eorzea_time = "{:02d}：{:02d}".format(Eorzea_hour, Eorzea_min)
+        self.Eorzea_hour = int(temp_time.strftime("%H"))
+        self.Eorzea_min = int(temp_time.strftime("%M"))
+        Eorzea_time = "{:02d}：{:02d}".format(self.Eorzea_hour, self.Eorzea_min)
         self.Eorzea_clock_out.SetLabel(label=Eorzea_time)
 
+    # 启动闹钟按钮点击事件
     def OnClick_run(self, event):
         if self.lvl_min.GetValue() > self.lvl_max.GetValue():
             self.lvl_min.SetValue(self.lvl_max.GetValue())
@@ -318,16 +397,50 @@ class MainWindow(wx.Frame):
                                     lvl_min_result, lvl_max_result)
             # 启动线程
             self.result_box_text.Show(False)
+            self.out_listctrl.Show(True)
+            self.out_listctrl_next.Show(True)
             clock_thread.start()
 
+    # 停止闹钟按钮事件
     def OnClick_stop(self, event):
         event.GetEventObject().Disable()
         clock_thread.stop()
 
+    # 等级检查事件
     def lvl_check(self, event):
         if self.lvl_min.GetValue() > self.lvl_max.GetValue():
             self.lvl_min.SetValue(self.lvl_max.GetValue())
             wx.MessageDialog(self, "等级下限不应当高于等级上限！", "等级设置错误").ShowModal()
+
+    def click_line_in_list(self, event):
+        click_name = event.GetEventObject().GetItemText(event.GetEventObject().GetFirstSelected())
+        select_next = (((clock['材料名JP'] == click_name) | (clock['材料名EN'] == click_name) | (
+                clock['材料名CN'] == click_name)) & (
+                               (clock['开始ET'] <= self.Eorzea_hour) & (clock['结束ET'] > self.Eorzea_hour)))
+        clock_found = clock[select_next].head(None)
+        if len(clock_found) == 0:
+            pass
+        else:
+            img_name = str(clock_found.iloc[0]['图片'])
+            self.img_ctrl.Show(True)
+            img_adress = resource_path('./img/' + img_name + '.jpg')
+            img = wx.Image(img_adress, wx.BITMAP_TYPE_ANY).Scale(500, 500)
+            self.img_ctrl.SetBitmap(wx.Bitmap(img))
+
+    def click_line_in_list_next(self, event):
+        click_name = event.GetEventObject().GetItemText(event.GetEventObject().GetFirstSelected())
+        select_next = (((clock['材料名JP'] == click_name) | (clock['材料名EN'] == click_name) | (
+                clock['材料名CN'] == click_name)) & (
+                               (clock['开始ET'] <= (self.Eorzea_hour + 2)) & (clock['结束ET'] > (self.Eorzea_hour + 2))))
+        clock_found = clock[select_next].head(None)
+        if len(clock_found) == 0:
+            pass
+        else:
+            img_name = str(clock_found.iloc[0]['图片'])
+            self.img_ctrl.Show(True)
+            img_adress = resource_path('./img/' + img_name + '.jpg')
+            img = wx.Image(img_adress, wx.BITMAP_TYPE_ANY).Scale(500, 500)
+            self.img_ctrl.SetBitmap(wx.Bitmap(img))
 
 
 if __name__ == '__main__':
