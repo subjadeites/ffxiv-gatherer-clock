@@ -429,9 +429,13 @@ class MainWindow(wx.Frame):
 
     def click_line_in_list_next(self, event):
         click_name = event.GetEventObject().GetItemText(event.GetEventObject().GetFirstSelected())
+        if self.Eorzea_hour == 22 or self.Eorzea_hour == 23:
+            Eorzea_hour_next = self.Eorzea_hour + 2 - 24
+        else:
+            Eorzea_hour_next = self.Eorzea_hour + 2
         select_next = (((clock['材料名JP'] == click_name) | (clock['材料名EN'] == click_name) | (
-                clock['材料名CN'] == click_name)) & (
-                               (clock['开始ET'] <= (self.Eorzea_hour + 2)) & (clock['结束ET'] > (self.Eorzea_hour + 2))))
+                    clock['材料名CN'] == click_name)) & (
+                                   (clock['开始ET'] <= Eorzea_hour_next) & (clock['结束ET'] > Eorzea_hour_next)))
         clock_found = clock[select_next].head(None)
         if len(clock_found) == 0:
             pass
