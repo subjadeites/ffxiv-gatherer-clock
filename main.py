@@ -1,6 +1,6 @@
 # !/usr/bin/env python
 # -*- coding: utf-8 -*-
-# @Time    : 2021/12/18 17:52
+# @Time    : 2021/12/29 18:00
 # @Author  : subjadeites
 # @File    : main.py
 import datetime
@@ -13,7 +13,18 @@ import pandas as pd
 import win32com.client
 import wx
 
-version = "1.0.0 beta"
+version = "1.1.2"
+
+
+# 新的tts方法，解决卡进程问题
+# 感谢Natar Laurent@Chocobo
+def tts(msg):
+    if spk.Status.runningState == 2:
+        spk.Speak("", 2)
+        spk.Speak(msg, 1)
+
+    else:
+        spk.Speak(msg, 1)
 
 
 # 用于计算ET小时的方法
@@ -139,17 +150,19 @@ def clock_out(lang, Eorzea_time_in, need_tts, func, ZhiYe, lvl_min, lvl_max) -> 
                 i += 1
 
         if need_tts is True:
+            tts_word = ""
             for i in range(0, len(out_list)):
-                spk.Speak(out_list[i][0])
-                spk.Speak((str(out_list[i][1]) + "级"))
-                spk.Speak(out_list[i][2])
-                spk.Speak(out_list[i][3])
-                spk.Speak(out_list[i][4])
-                spk.Speak(out_list[i][5])
-        if len(clock_found_next) > 0:
-            spk.Speak("已为您更新下个时段预告")
-        elif len(clock_found_next) == 0:
-            spk.Speak("下个时段无筛选条件下结果")
+                tts_word = tts_word + out_list[i][0] + "。"
+                tts_word = tts_word + str(out_list[i][1]) + "级" + "。"
+                tts_word = tts_word + out_list[i][2] + "。"
+                tts_word = tts_word + out_list[i][3] + "。"
+                tts_word = tts_word + out_list[i][4] + "。"
+                tts_word = tts_word + out_list[i][5] + "。"
+            if len(clock_found_next) > 0:
+                tts_word = tts_word + "已为您更新下个时段预告" + "。"
+            elif len(clock_found_next) == 0:
+                tts_word = tts_word + "下个时段无筛选条件下结果" + "。"
+            tts(tts_word)
         return next_start_time
 
 
@@ -209,7 +222,7 @@ class Clock_Thread(Thread):
                             spk.Speak("时限已刷新！")
                     else:
                         spk.Speak("时限已刷新！")
-                time.sleep(3)
+                time.sleep(1)
 
     def set_values(self, lang: str, need_tts: bool, func: list, ZhiYe: int, lvl_min: int,
                    lvl_max: int):
@@ -227,8 +240,11 @@ class Clock_Thread(Thread):
 class MainWindow(wx.Frame):
     def __init__(self, parent, title):
         super().__init__(parent=None, title=title, size=(1280, 768))  # 继承wx.Frame类
+        self.line_pos = [10, 70, 130, 195, 220, 250, 280, 300, 480, 500]  # 将每行按钮的y轴坐标用list保存，方便修改
         self.main_frame = wx.Panel(self)
-
+        # 设置图标
+        self.icon = wx.Icon('clock.ico', wx.BITMAP_TYPE_ICO)
+        self.SetIcon(self.icon)
         # 设置菜单
         filemenu = wx.Menu()
         # wx.ID_ABOUT和wx.ID_EXIT是wxWidgets提供的标准ID
@@ -255,42 +271,48 @@ class MainWindow(wx.Frame):
         self.Bind(wx.EVT_TIMER, self.Eorzea_time, self.Eorzea_clock)
         self.Eorzea_clock.Start(300)
         # 设置settings
-        self.choose_lang = wx.RadioBox(self.main_frame, -1, "选择语言", (10, 10), wx.DefaultSize,
+        self.choose_lang = wx.RadioBox(self.main_frame, -1, "选择语言", (10, self.line_pos[0]), wx.DefaultSize,
                                        ['日语JP', '英语EN'], 2, wx.RA_SPECIFY_COLS)
-        self.choose_TTS = wx.RadioBox(self.main_frame, -1, "是否开启TTS", (150, 10), wx.DefaultSize,
+        self.choose_TTS = wx.RadioBox(self.main_frame, -1, "是否开启TTS", (170, self.line_pos[0]), wx.DefaultSize,
                                       ['是', '否'], 2, wx.RA_SPECIFY_COLS)
-
-        self.choose_ZhiYe = wx.RadioBox(self.main_frame, -1, "选择职业", (10, 70), wx.DefaultSize,
+        self.choose_ZhiYe = wx.RadioBox(self.main_frame, -1, "选择职业", (10, self.line_pos[1]), wx.DefaultSize,
                                         ['全部', '采掘', '园艺'], 3, wx.RA_SPECIFY_COLS)
+        self.choose_DLC = wx.RadioBox(self.main_frame, -1, "选择筛选类型", (170, self.line_pos[1]), wx.DefaultSize,
+                                      ['简单筛选', '自定义筛选'], 2, wx.RA_SPECIFY_COLS)
+        self.choose_DLC = wx.RadioBox(self.main_frame, -1, "选择版本", (10, self.line_pos[2]), wx.DefaultSize,
+                                      ['晓月', '全部', '漆黑', '红莲', '苍天', '新生'], 6, wx.RA_SPECIFY_COLS)
         # 设置时限点筛选多选框
-        choose_func_text = wx.StaticText(self.main_frame, label='请选择需要提醒的采集点种类：', pos=(10, 140))
-        self.choose_func_1 = wx.CheckBox(self.main_frame, 91, "白票收藏品", pos=(180, 140))
-        self.choose_func_2 = wx.CheckBox(self.main_frame, 92, "紫票收藏品", pos=(270, 140))
-        self.choose_func_3 = wx.CheckBox(self.main_frame, 93, "精选灵砂", pos=(360, 140))
-        self.choose_func_4 = wx.CheckBox(self.main_frame, 94, "普通传说点", pos=(450, 140))
-        self.choose_func_5 = wx.CheckBox(self.main_frame, 95, "1星传说点", pos=(540, 140))
+        choose_func_text = wx.StaticText(self.main_frame, label='请选择需要提醒的采集点种类：', pos=(10, self.line_pos[3]))
+        self.choose_func_1 = wx.CheckBox(self.main_frame, 91, "白票收藏品", pos=(180, self.line_pos[3]))
+        self.choose_func_2 = wx.CheckBox(self.main_frame, 92, "紫票收藏品", pos=(270, self.line_pos[3]))
+        self.choose_func_3 = wx.CheckBox(self.main_frame, 93, "精选灵砂", pos=(360, self.line_pos[3]))
+        self.choose_func_4 = wx.CheckBox(self.main_frame, 94, "普通传说点", pos=(450, self.line_pos[3]))
+        self.choose_func_5 = wx.CheckBox(self.main_frame, 95, "1星传说点", pos=(540, self.line_pos[3]))
         # 设置等级上下限输入框
-        choose_lvl_text = wx.StaticText(self.main_frame, label='请选择等级区间：', pos=(10, 170))
-        self.lvl_min = wx.SpinCtrl(self.main_frame, size=(45, 20), pos=(110, 170), name='wxSpinCtrl', min=0, max=90,
+        choose_lvl_text = wx.StaticText(self.main_frame, label='请选择等级区间：', pos=(10, self.line_pos[4]))
+        self.lvl_min = wx.SpinCtrl(self.main_frame, size=(45, 20), pos=(110, self.line_pos[4]), name='wxSpinCtrl',
+                                   min=0, max=90,
                                    initial=80, style=0)
         self.lvl_min.Bind(wx.EVT_SPINCTRL, self.lvl_check)
-        choose_lvl_text2 = wx.StaticText(self.main_frame, label='～', pos=(155, 170))
-        self.lvl_max = wx.SpinCtrl(self.main_frame, size=(45, 20), pos=(170, 170), name='wxSpinCtrl', min=0, max=90,
+        choose_lvl_text2 = wx.StaticText(self.main_frame, label='～', pos=(155, self.line_pos[4]))
+        self.lvl_max = wx.SpinCtrl(self.main_frame, size=(45, 20), pos=(170, self.line_pos[4]), name='wxSpinCtrl',
+                                   min=0, max=90,
                                    initial=90, style=0)
         self.lvl_max.Bind(wx.EVT_SPINCTRL, self.lvl_check)
         # 设置启动和停止按钮
-        self.button_run = wx.Button(self.main_frame, -1, "设定完毕，开启闹钟", pos=(10, 200))
+        self.button_run = wx.Button(self.main_frame, -1, "设定完毕，开启闹钟", pos=(10, self.line_pos[5]))
         self.Bind(wx.EVT_BUTTON, self.OnClick_run, self.button_run)
-        self.button_stop = wx.Button(self.main_frame, -1, "取消闹钟/重新设定", pos=(150, 200))
+        self.button_stop = wx.Button(self.main_frame, -1, "取消闹钟/重新设定", pos=(150, self.line_pos[5]))
         self.button_stop.Disable()
         self.Bind(wx.EVT_BUTTON, self.OnClick_stop, self.button_stop)
         # 设置当前时段时限提示
-        self.result_box_text_1 = wx.StaticText(self.main_frame, size=(720, 20), pos=(10, 240),
+        self.result_box_text_1 = wx.StaticText(self.main_frame, size=(720, 20), pos=(10, self.line_pos[6]),
                                                label="=========当前时段时限点位=========", name='staticText_result',
                                                style=2321)
         self.result_box_text_1.Show(False)
         # 创建当前时段采集时钟控件
-        self.out_listctrl = wx.ListCtrl(self.main_frame, wx.ID_ANY, style=wx.LC_REPORT, pos=(10, 260), size=(720, -1))
+        self.out_listctrl = wx.ListCtrl(self.main_frame, wx.ID_ANY, style=wx.LC_REPORT, pos=(10, self.line_pos[7]),
+                                        size=(720, -1))
         self.out_listctrl.Show(False)
         self.out_listctrl.InsertColumn(0, '材料名', width=250)
         self.out_listctrl.InsertColumn(1, '等级', width=60)
@@ -308,12 +330,12 @@ class MainWindow(wx.Frame):
                                         style=17)
         self.result_box.SetFont(wx.Font(11, 75, 90, 400, False, '新宋体', 28))
         # endregion"""
-        self.result_box_text_2 = wx.StaticText(self.main_frame, size=(720, 20), pos=(10, 460),
+        self.result_box_text_2 = wx.StaticText(self.main_frame, size=(720, 20), pos=(10, self.line_pos[8]),
                                                label="=========下个时段时限点位=========", name='staticText_result',
                                                style=2321)
         self.result_box_text_2.Show(False)
         # 创建下一时段采集时钟控件
-        self.out_listctrl_next = wx.ListCtrl(self.main_frame, wx.ID_ANY, style=wx.LC_REPORT, pos=(10, 480),
+        self.out_listctrl_next = wx.ListCtrl(self.main_frame, wx.ID_ANY, style=wx.LC_REPORT, pos=(10, self.line_pos[9]),
                                              size=(720, -1))
         self.out_listctrl_next.Show(False)
         self.out_listctrl_next.InsertColumn(0, '材料名', width=250)
@@ -399,12 +421,14 @@ class MainWindow(wx.Frame):
             self.result_box_text.Show(False)
             self.out_listctrl.Show(True)
             self.out_listctrl_next.Show(True)
+            clock_thread.setDaemon(True)
             clock_thread.start()
 
     # 停止闹钟按钮事件
     def OnClick_stop(self, event):
         event.GetEventObject().Disable()
         clock_thread.stop()
+        tts('')
 
     # 等级检查事件
     def lvl_check(self, event):
@@ -434,8 +458,8 @@ class MainWindow(wx.Frame):
         else:
             Eorzea_hour_next = self.Eorzea_hour + 2
         select_next = (((clock['材料名JP'] == click_name) | (clock['材料名EN'] == click_name) | (
-                    clock['材料名CN'] == click_name)) & (
-                                   (clock['开始ET'] <= Eorzea_hour_next) & (clock['结束ET'] > Eorzea_hour_next)))
+                clock['材料名CN'] == click_name)) & (
+                               (clock['开始ET'] <= Eorzea_hour_next) & (clock['结束ET'] > Eorzea_hour_next)))
         clock_found = clock[select_next].head(None)
         if len(clock_found) == 0:
             pass
@@ -455,7 +479,7 @@ if __name__ == '__main__':
     # 导入系统tts
     spk = win32com.client.Dispatch("SAPI.SpVoice")
     spk_jp = win32com.client.Dispatch("SAPI.SpVoice")
-    spk.Speak("")
+    tts('')
 
     # 导入采集时钟
     try:
