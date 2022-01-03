@@ -14,7 +14,7 @@ import requests
 import win32com.client
 import wx
 
-version = "1.1.2"
+version = "1.1.3"
 
 
 # 新的tts方法，解决卡进程问题
@@ -264,7 +264,7 @@ class MainWindow(wx.Frame):
         self.line_pos = [10, 70, 130, 195, 220, 250, 280, 300, 480, 500]  # 将每行按钮的y轴坐标用list保存，方便修改
         self.main_frame = wx.Panel(self)
         # 设置图标
-        self.icon = wx.Icon('clock.ico', wx.BITMAP_TYPE_ICO)
+        self.icon = wx.Icon('./resource/clock.ico', wx.BITMAP_TYPE_ICO)
         self.SetIcon(self.icon)
         # 设置菜单
         filemenu = wx.Menu()
@@ -569,7 +569,7 @@ class More_Choose_Windows(wx.Frame):
         super().__init__(parent=None, title=title, size=(1280, 768))  # 继承wx.Frame类
         self.main_frame = wx.Panel(self)
         # 设置图标
-        self.icon = wx.Icon('clock.ico', wx.BITMAP_TYPE_ICO)
+        self.icon = wx.Icon('./resource/clock.ico', wx.BITMAP_TYPE_ICO)
         self.SetIcon(self.icon)
         # 初始化序列
         select_dict = {}
@@ -608,7 +608,7 @@ if __name__ == '__main__':
     choose_ZhiYe_dict = {
         0: "",
         1: "& (clock['职能'] == '采掘')",
-        2: "& (clock['园艺'] == '采掘')",
+        2: "& (clock['职能'] == '园艺')",
     }
     Eorzea_time_start = "{:02d}：{:02d}".format(
         int(datetime.datetime.utcfromtimestamp((time.time() * 1440 / 70) % 86400).strftime("%H")),
