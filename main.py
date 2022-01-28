@@ -16,7 +16,7 @@ import win32com.client
 import wx
 import wx.lib.buttons as lib_btn
 
-version = "1.2.0"
+version = "1.2.1"
 
 
 # 新的tts方法，解决卡进程问题
