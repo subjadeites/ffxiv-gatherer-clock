@@ -1,31 +1,41 @@
 # !/usr/bin/env python
 # -*- coding: utf-8 -*-
-# @Time    : 2021/1/19 18:00
+# @Time    : 2021/2/7 20:00
 # @Author  : subjadeites
 # @File    : main.py
 import copy
 import datetime
 import json
+import os
 import time
 import webbrowser
+from hashlib import md5
 from threading import Thread
 
 import pandas as pd
 import requests
+import win32api
 import win32com.client
+import win32con
 import wx
 import wx.lib.buttons as lib_btn
 
-version = "1.2.1"
+from lib.update import version
+from utils.google_analytics import google_analytics
 
 
 # 新的tts方法，解决卡进程问题
+# 引入了can_not_break参数以解决『下个时段预报』TTS会打断主TTS的BUG，如果可以打断主TTS则不填（默认False），不能打断则引入True）
 # 感谢Natar Laurent@Chocobo
-def tts(msg):
-    if spk.Status.runningState == 2:
+def tts(msg, can_not_break: bool = False):
+    if spk.Status.runningState == 2 and can_not_break is False:
         spk.Speak("", 2)
         spk.Speak(msg, 1)
-
+    elif spk.Status.runningState == 2 and can_not_break is False:
+        while spk.Status.runningState == 1:
+            spk.Speak("", 2)
+            spk.Speak(msg, 1)
+            break
     else:
         spk.Speak(msg, 1)
 
@@ -34,7 +44,7 @@ def tts(msg):
 def Eorzea_time() -> int:
     temp_time = datetime.datetime.utcfromtimestamp((time.time() * 1440 / 70) % 86400)
     Eorzea_hour = int(temp_time.strftime("%H"))
-    Eorzea_min = int(temp_time.strftime("%M"))
+    # Eorzea_min = int(temp_time.strftime("%M"))
     return Eorzea_hour
 
 
@@ -52,14 +62,15 @@ def func_select(func) -> str:
 
 
 # 闹钟核心方法
+# noinspection PyUnusedLocal
 def clock_out(lang, Eorzea_time_in, need_tts, func, ZhiYe, lvl_min, lvl_max, choose_DLC, client_verion,
-              more_select_result) -> int:
+              more_select_result, next_clock_time) -> int:
     # 换日,兼容2.0里3个ET小时刷新的时限
     if Eorzea_time_in == 23:
         next_start_time = 0
     else:
         next_start_time = Eorzea_time_in + 1
-    # 国服更新6.0后需修改
+    # TODO:国服更新6.0后需修改
     if client_verion == '国服':
         choose_DLC = '国服全部'
 
@@ -165,7 +176,7 @@ def clock_out(lang, Eorzea_time_in, need_tts, func, ZhiYe, lvl_min, lvl_max, cho
         if need_tts is True:
             tts_word = ""
             for i in range(0, len(out_list)):
-                if out_list[i][0] in old_out_list:
+                if out_list[i][0] in old_out_list and next_clock_time != -1:
                     pass
                 else:
                     nearby = '' if out_list[i][5] == '暂无数据' else out_list[i][5]
@@ -175,17 +186,21 @@ def clock_out(lang, Eorzea_time_in, need_tts, func, ZhiYe, lvl_min, lvl_max, cho
                     tts_word = tts_word + out_list[i][3] + "。"
                     tts_word = tts_word + out_list[i][4] + "。"
                     tts_word = tts_word + nearby + "。"
-            if len(clock_found_next) > 0 and out_list != out_list_next:
+            if len(clock_found_next) > 0 and out_list != out_list_next and tts_word != "":
                 tts_word = tts_word + "已为您更新下个时段预告" + "。"
-            elif len(clock_found_next) == 0:
+            elif len(clock_found_next) == 0 and spk.Status.runningState == 1 and tts_word != "":
                 tts_word = tts_word + "下个时段无筛选条件下结果" + "。"
+            elif len(clock_found_next) > 0 and out_list != out_list_next and tts_word == "":
+                tts("已为您更新下个时段预告。", True)
+            elif len(clock_found_next) == 0 and tts_word == "":
+                tts("下个时段无筛选条件下结果。", True)
             tts(tts_word)
         else:
             should_tss = False
             for i in range(0, len(out_list)):
                 if out_list[i][0] not in old_out_list:
                     should_tss = True
-                elif old_out_list == []:  # 用于首次启动闹钟时触发tts
+                elif not old_out_list:  # 用于首次启动闹钟时触发tts
                     should_tss = True
             if should_tss is True:
                 spk.Speak("时限已刷新！")
@@ -205,9 +220,21 @@ class Clock_Thread(Thread):
         self.choose_DLC = "全部"
         self.client_version = '国际服'
         self.more_select_result = ''
+        self.next_clock_time = -1
 
     def run(self):
-        next_clock_time = -1
+        next_clock_time = self.next_clock_time
+        # region google统计埋点
+        temp_title = ""
+        func_to_title_dict = {0: "全部", 1: "白票", 2: " 紫票", 3: " 灵砂", 4: " 传说", 5: " 包浆", 6: " 水晶", 7: " 晶簇", }
+        if self.func == [0]:
+            temp_title = "全部"
+        else:
+            for v in self.func:
+                temp_title.join(func_to_title_dict.get(v))
+        ga.increase_counter(name=self.choose_DLC, category=self.client_version, title=temp_title,
+                            other_parameter={"cd1": "test"})
+        # endregion
         while True:
             if self.is_run is False:
                 frame.button_run.Enable()
@@ -225,7 +252,7 @@ class Clock_Thread(Thread):
                 elif now_Eorzea_hour >= next_clock_time:
                     next_clock_time = clock_out(self.lang, now_Eorzea_hour, self.need_tts, self.func, self.ZhiYe,
                                                 self.lvl_min, self.lvl_max, self.choose_DLC, self.client_version,
-                                                self.more_select_result)
+                                                self.more_select_result, next_clock_time)
                 time.sleep(1)
 
     def set_values(self, lang: str, need_tts: bool, func: list, ZhiYe: int, lvl_min: int,
@@ -241,6 +268,7 @@ class Clock_Thread(Thread):
         self.more_select_result = more_select_result
 
     def stop(self):
+        self.next_clock_time = -1  # 用于重置计时器
         self.is_run = False
 
 
@@ -251,6 +279,7 @@ class Check_Update(Thread):
         self.runtime = 0
         self.have_update = False
         self.version_online = ""
+        self.version_online_describe = "未写入新版本介绍"
 
     def set_runtime(self, runtime):
         self.runtime = runtime
@@ -260,27 +289,29 @@ class Check_Update(Thread):
             if self.is_run is False:
                 globals()['check_update'] = Check_Update()
                 break
-            elif is_auto_update == False and self.runtime == 0:
+            elif not is_auto_update and self.runtime == 0:
                 break
             else:
                 try:
                     url = 'https://raw.fastgit.org/subjadeites/ffxiv-gatherer-clock/master/version.json'
-                    response = requests.request("get", url)
-                    version_online = eval(response.text).get("Version")
+                    response = requests.get(url, timeout=10)
+                    version_online_json = eval(response.text)
+                    version_online = version_online_json.get("Version")
                     self.version_online = version_online
+                    version_online_describe = version_online_json.get("describe")
+                    self.version_online_describe = version_online_describe
                     version_online_as_tuple = tuple(int(x) for x in version_online.split('.'))
                     version_as_tuple = tuple(int(x) for x in version.split('.'))
                     if version_online == version:
                         self.stop()
                     else:
-                        version_online_as_ints = version_online_as_tuple[0] * 10000 + version_online_as_tuple[1] * 100 + \
-                                                 version_online_as_tuple[2]
-                        version_as_ints = version_as_tuple[0] * 10000 + version_as_tuple[1] * 100 + \
-                                          version_as_tuple[2]
+                        version_online_as_ints = version_online_as_tuple[0] * 10000 + \
+                                                 version_online_as_tuple[1] * 100 + version_online_as_tuple[2]
+                        version_as_ints = version_as_tuple[0] * 10000 + version_as_tuple[1] * 100 + version_as_tuple[2]
                         if version_online_as_ints > version_as_ints:
                             self.stop()
                             self.have_update = True
-                            frame.update_info(version_online)
+                            frame.update_info(version_online,version_online_describe)
                             if frame.update_info_msg.ShowModal() == wx.ID_YES:
                                 webbrowser.open("https://github.com/subjadeites/ffxiv-gatherer-clock")
                             else:
@@ -288,7 +319,7 @@ class Check_Update(Thread):
                             frame.update_info_msg.Destroy()
                         else:
                             self.stop()
-                except:
+                except Exception:
                     self.is_run = False
                     frame.update_error_dlg.ShowModal()
                     frame.update_error_dlg.Destroy()  # 当结束之后关闭对话框
@@ -298,16 +329,19 @@ class Check_Update(Thread):
         self.is_run = False
 
 
+# noinspection PyUnusedLocal
 class MainWindow(wx.Frame):
     def __init__(self, parent, title):
         super().__init__(parent=None, title=title, size=main_size)  # 继承wx.Frame类
         self.line_pos = [10, 70, 130, 195, 220, 250, 280, 300, 480, 500]  # 将每行按钮的y轴坐标用list保存，方便修改
         self.main_frame = wx.Panel(self)
-        # 初始化需要传递的变量
+        # 初始化需要传递/需要使用的变量
         self.more_select_result_list = []
+        self.is_auto_update = True
+        self.is_can_DLC_6 = True
+        self.is_GA = True
         # 设置图标
-        self.icon = wx.Icon('./resource/Clock.ico', wx.BITMAP_TYPE_ICO)
-        self.SetIcon(self.icon)
+        self.SetIcon(main_icon)
         # 设置菜单
         filemenu = wx.Menu()
         # wx.ID_ABOUT和wx.ID_EXIT是wxWidgets提供的标准ID
@@ -323,10 +357,10 @@ class MainWindow(wx.Frame):
         item_about = updatemenu.Append(wx.ID_ABOUT, "关于", "关于程序的信息")
         self.Bind(wx.EVT_MENU, self.OnAbout, item_about)
         # 创建菜单栏
-        menuBar = wx.MenuBar()
-        menuBar.Append(filemenu, "文件")
-        menuBar.Append(updatemenu, '帮助')
-        self.SetMenuBar(menuBar)
+        menubar = wx.MenuBar()
+        menubar.Append(filemenu, "文件")
+        menubar.Append(updatemenu, '帮助')
+        self.SetMenuBar(menubar)
         # 设置ET时钟
         self.Eorzea_clock_out_text = wx.StaticText(self.main_frame, size=(110, 20), pos=(main_size[0] - 170, 5),
                                                    label="ET时钟：", name='staticText',
@@ -338,7 +372,7 @@ class MainWindow(wx.Frame):
         self.Eorzea_clock_out.SetFont(clock_font)
         self.Eorzea_clock_out_text.SetFont(clock_font)
         self.Eorzea_clock = wx.Timer(self)
-        self.Bind(wx.EVT_TIMER, self.Eorzea_time, self.Eorzea_clock)
+        self.Bind(wx.EVT_TIMER, self.Eorzea_time_clock, self.Eorzea_clock)
         self.Eorzea_clock.Start(300)
         # 设置settings
         self.choose_client = wx.RadioBox(self.main_frame, -1, "选择客户端", (10, self.line_pos[0]), wx.DefaultSize,
@@ -373,12 +407,12 @@ class MainWindow(wx.Frame):
         self.Bind(wx.EVT_CHECKBOX, self.choose_func_auto_write, self.choose_func_6)
         self.Bind(wx.EVT_CHECKBOX, self.choose_func_auto_write, self.choose_func_7)
         # 设置等级上下限输入框
-        choose_lvl_text = wx.StaticText(self.main_frame, label='请选择等级区间：', pos=(10, self.line_pos[4]))
+        wx.StaticText(self.main_frame, label='请选择等级区间：', pos=(10, self.line_pos[4]))
         self.lvl_min = wx.SpinCtrl(self.main_frame, size=(45, 20), pos=(110, self.line_pos[4]), name='wxSpinCtrl',
                                    min=0, max=90,
                                    initial=80, style=0)
         self.lvl_min.Bind(wx.EVT_SPINCTRL, self.lvl_check)
-        choose_lvl_text2 = wx.StaticText(self.main_frame, label='～', pos=(155, self.line_pos[4]))
+        wx.StaticText(self.main_frame, label='～', pos=(155, self.line_pos[4]))
         self.lvl_max = wx.SpinCtrl(self.main_frame, size=(45, 20), pos=(170, self.line_pos[4]), name='wxSpinCtrl',
                                    min=0, max=90,
                                    initial=90, style=0)
@@ -437,14 +471,23 @@ class MainWindow(wx.Frame):
         self.Bind(wx.EVT_CLOSE, self.OnExit)
         self.Show(True)
         try:
+            ga.increase_counter(name="启动程序", category="启动程序", title="启动程序",
+                                other_parameter={"cd1": "start"})
+            self.accept_online_msg(self)
             auto_check_update.setDaemon(True)
             auto_check_update.start()  # 开启时自动检查更新一次
-        except:
-            pass
+        except Exception:
+            ga.increase_counter(name="启动程序", category="启动程序", title="启动程序",
+                                other_parameter={"cd1": "start"})
 
+    @staticmethod
     def OnAbout(self, event):
         dlg = wx.MessageDialog(self,
-                               """欢迎使用原生态手搓纯天然本地采集时钟！\n当前程序版本：{0}\n当前数据版本：仅国际服6.0，已支持E端物品名\n开源地址：https://github.com/subjadeites/ffxiv-gatherer-clock\nNGA发布地址：https://bbs.nga.cn/read.php?tid=29755989&\n如果遇到BUG，或者有好的功能建议，可以通过上述渠道反馈""".format(
+                               "欢迎使用原生态手搓纯天然本地采集时钟！\n当前程序版本：{0}\n"
+                               "当前数据版本：仅国际服6.0，已支持E端物品名\n"
+                               "开源地址：https://github.com/subjadeites/ffxiv-gatherer-clock\n"
+                               "NGA发布地址：https://bbs.nga.cn/read.php?tid=29755989&\n"
+                               "如果遇到BUG，或者有好的功能建议，可以通过上述渠道反馈".format(
                                    version), "关于")  # 语法是(self, 内容, 标题, ID)
         dlg.ShowModal()  # 显示对话框
         dlg.Destroy()  # 当结束之后关闭对话框
@@ -453,17 +496,17 @@ class MainWindow(wx.Frame):
         try:
             clock_thread.stop()
             tts('')
-        except:
+        except Exception:
             pass
         self.Destroy()  # 关闭整个frame
 
     # ET时钟定时事件
-    def Eorzea_time(self, event):
+    def Eorzea_time_clock(self, event):
         temp_time = datetime.datetime.utcfromtimestamp((time.time() * 1440 / 70) % 86400)
         self.Eorzea_hour = int(temp_time.strftime("%H"))
         self.Eorzea_min = int(temp_time.strftime("%M"))
-        Eorzea_time = "{:02d}：{:02d}".format(self.Eorzea_hour, self.Eorzea_min)
-        self.Eorzea_clock_out.SetLabel(label=Eorzea_time)
+        Eorzea_time_str = "{:02d}：{:02d}".format(self.Eorzea_hour, self.Eorzea_min)
+        self.Eorzea_clock_out.SetLabel(label=Eorzea_time_str)
 
     # 启动闹钟按钮点击事件
     def OnClick_run(self, event):
@@ -475,20 +518,19 @@ class MainWindow(wx.Frame):
             wx.MessageDialog(self, "国服尚未更新晓月版本", "DLC选择错误").ShowModal()
         else:
             if self.is_can_DLC_6 is False:
-                self.FangJuTouJingCha = wx.MessageDialog(None,
-                                                         "按照您的防剧透设定，您不可使用『晓月』DLC的闹钟\n点击【是】可以将设定改为允许剧透模式\n点击【否】保持禁止剧透模式并关闭窗口",
-                                                         "剧透警告！！！", wx.YES_NO | wx.ICON_QUESTION)
+                FangJuTouJingCha = wx.MessageDialog(None,
+                                                    "按照您的防剧透设定，您不可使用『晓月』DLC的闹钟\n点击【是】可以将设定改为允许剧透模式\n点击【否】保持禁止剧透模式并关闭窗口",
+                                                    "剧透警告！！！", wx.YES_NO | wx.ICON_QUESTION)
 
-                if self.FangJuTouJingCha.ShowModal() == wx.ID_YES:
+                if FangJuTouJingCha.ShowModal() == wx.ID_YES:
                     self.is_can_DLC_6 = True
-                    with open("./resource/config.json", "w") as f:
-                        write_dict = {}
-                        write_dict['is_auto_update'] = self.is_auto_update
-                        write_dict['is_can_DLC_6'] = self.is_can_DLC_6
+                    with open("./conf/config.json", "w", encoding="utf-8") as f:
+                        write_dict = {'is_auto_update': self.is_auto_update, 'is_can_DLC_6': self.is_can_DLC_6,
+                                      'is_GA': self.is_GA}
                         json.dump(write_dict, f)
                 else:
                     pass
-                self.FangJuTouJingCha.Destroy()
+                FangJuTouJingCha.Destroy()
             else:
                 if self.choose_client.GetSelection() == 0:
                     choose_lang_result = ['JP', 'EN'][self.choose_lang.GetSelection()]  # 确定语言
@@ -525,7 +567,7 @@ class MainWindow(wx.Frame):
                 for k, v in choose_func_result.items():
                     if v is True:
                         choose_func_list.append(k)
-                if choose_func_list == []:
+                if not choose_func_list:
                     choose_func_list = [0]
 
                 # 传入参数到闹钟线程
@@ -540,7 +582,8 @@ class MainWindow(wx.Frame):
                 clock_thread.start()
 
     # 停止闹钟按钮事件
-    def OnClick_stop(self, event):
+    @staticmethod
+    def OnClick_stop(event):
         event.GetEventObject().Disable()
         clock_thread.stop()
         tts('')
@@ -607,7 +650,7 @@ class MainWindow(wx.Frame):
             self.button_more_select.Show(False)
             try:
                 self.more_choose_windows.Close(True)
-            except:
+            except BaseException:
                 pass
         elif self.choose_select_way.GetSelection() == 1:
             self.choose_DLC.Disable()
@@ -643,26 +686,29 @@ class MainWindow(wx.Frame):
         self.more_select_result_list = temp_select_result_list
 
     # 更新弹窗
-    def update_info(self, version_online):
+    def update_info(self, version_online, version_online_describe: str = "未写入新版本介绍"):
         self.update_info_msg = wx.MessageDialog(None,
-                                                "发现新版本，版本号：{0}\n您当前版本号:{1}\n点击【是】进入Github页面下载\n点击【否】进入NGA发布页面\n如果不想更新，请将/resource/config.json用记事本打开，然后把「is_auto_update」后面的true改成false".format(
-                                                    version_online, version),
+                                                "发现新版本，版本号：{0}\n您当前版本号:{1}\n" \
+                                                "本次版本的新功能有：\n{2}\n\n" \
+                                                "点击【是】进入Github页面下载\n点击【否】进入NGA发布页面\n" \
+                                                "如果不想更新，请点击菜单中『文件』→『设置』修改".format(
+                                                    version_online, version, version_online_describe),
                                                 "新版本可用", wx.YES_NO | wx.ICON_QUESTION)
 
     def on_check_update(self, event):
         if check_update.have_update is True:
-            frame.update_info(check_update.version_online)
+            self.update_info(check_update.version_online,check_update.version_online_describe)
             if frame.update_info_msg.ShowModal() == wx.ID_YES:
                 webbrowser.open("https://github.com/subjadeites/ffxiv-gatherer-clock")
             else:
                 webbrowser.open("https://bbs.nga.cn/read.php?tid=29755989")
-            frame.update_info_msg.Destroy()
+            self.update_info_msg.Destroy()
         else:
             try:  # 连续点击会抛出错误，暂时这么处理
                 check_update.set_runtime(1)
                 check_update.setDaemon(True)
                 check_update.start()
-            except:
+            except BaseException:
                 pass
 
     def DLC_to_lvl(self, event):
@@ -695,43 +741,17 @@ class MainWindow(wx.Frame):
                 self.choose_DLC.SetSelection(0)
 
     def new_config(self, *args):
-        self.is_auto_update = True
-        self.is_can_DLC_6 = True
         if config_cant_read is True or len(args) == 1:
-            self.update_config = wx.MessageDialog(None,
-                                                  "未检测到配置文件，请问是否需要配置自动更新提示\n选【是】允许更新提示\n选【否】不允许更新提示",
-                                                  "是否启用自动更新", wx.YES_NO | wx.ICON_QUESTION)
+            self.config_windows = Config_Windows(None, title="设置")
+            self.config_windows.SetMaxSize(config_size)
+            self.config_windows.SetMinSize(config_size)
+            self.config_windows.Show(True)
+            self.Show(False)
 
-            if self.update_config.ShowModal() == wx.ID_YES:
-                new_is_auto_update = True
-            else:
-                new_is_auto_update = False
-                self.is_auto_update = False
-            self.update_config.Destroy()
-            self.jutou_config = wx.MessageDialog(None,
-                                                 "未检测到配置文件，请问是否允许剧透（国服模式下禁止使用「晓月」版本闹钟）\n选【是】允许剧透\n选【否】不允许剧透",
-                                                 "是否允许剧透", wx.YES_NO | wx.ICON_QUESTION)
-
-            if self.jutou_config.ShowModal() == wx.ID_YES:
-                new_is_can_DLC_6 = True
-            else:
-                new_is_can_DLC_6 = False
-                self.is_can_DLC_6 = False
-            self.jutou_config.Destroy()
-            with open("./resource/config.json", "w") as f:
-                write_dict = {}
-                write_dict['is_auto_update'] = new_is_auto_update
-                write_dict['is_can_DLC_6'] = new_is_can_DLC_6
-                json.dump(write_dict, f)
-            globals()['is_auto_update'] = self.is_auto_update
-            globals()['is_can_DLC_6'] = self.is_can_DLC_6
-            globals()['auto_check_update'] = Check_Update()
-            auto_check_update.setDaemon(True)
-            auto_check_update.start()  # 开启时自动检查更新一次
-
-    def transfer_config(self, is_can_DLC_6, is_auto_update):
-        self.is_can_DLC_6 = is_can_DLC_6
-        self.is_auto_update = is_auto_update
+    def transfer_config(self, _is_can_DLC_6, _is_auto_update, _is_GA):
+        self.is_can_DLC_6 = _is_can_DLC_6
+        self.is_auto_update = _is_auto_update
+        self.is_GA = _is_GA
 
     def transfer_button_more_select_shown(self, shown):
         if shown is True:
@@ -741,15 +761,60 @@ class MainWindow(wx.Frame):
             self.button_more_select.Disable()
             self.button_more_select.Show(True)
 
+    # 热公告支持
+    @staticmethod
+    def accept_online_msg(self):
+        online_msg_json = {}
+        try:  # 优先读取本地代码，测试用
+            with open(r'./msg.json', encoding="utf-8") as f:
+                online_msg_json = json.load(f)
+        except FileNotFoundError:  # 请求在线热公告
+            url = 'https://raw.fastgit.org/subjadeites/ffxiv-gatherer-clock/master/msg.json'
+            response = requests.get(url, timeout=10)
+            online_msg_json = eval(response.text)
+        title = online_msg_json.get('title')
+        msg_text = online_msg_json.get('msg')
+        md_type = online_msg_json.get('type')
+        online_msg_json_md5 = md5(str(online_msg_json).encode(encoding='UTF-8')).hexdigest()
+        try:
+            with open(r'./conf/online_msg_read', "r", encoding="UTF-8") as f:
+                have_read_md5 = f.read()
+        except FileNotFoundError:
+            have_read_md5 = ""
+        if online_msg_json == {} or have_read_md5 == online_msg_json_md5 or online_msg_json.get('is_push') is False:
+            pass
+        else:
+            if online_msg_json.get('type') == "YES":
+                online_msg_md = wx.MessageDialog(None, msg_text, title, wx.OK | wx.ICON_INFORMATION)
+                online_msg_md.ShowModal()
+                online_msg_md.Destroy()
+                try:
+                    with open(r'./conf/online_msg_read', "w", encoding="UTF-8") as f:
+                        f.write(online_msg_json_md5)
+                    win32api.SetFileAttributes(r'./conf/online_msg_read', win32con.FILE_ATTRIBUTE_HIDDEN)
+                except BaseException:
+                    pass
+            elif online_msg_json.get('type') == "YES_NO":
+                online_msg_md = wx.MessageDialog(None, msg_text, title, wx.YES_NO | wx.ICON_INFORMATION)
+                online_msg_md.ShowModal()
+                online_msg_md.Destroy()
+                try:
+                    with open(r'./conf/online_msg_read', "w", encoding="UTF-8") as f:
+                        f.write(online_msg_json_md5)
+                except BaseException:
+                    pass
+            else:
+                pass
 
+
+# noinspection PyUnusedLocal
 class More_Choose_Windows(wx.Frame):
     def __init__(self, parent, title, lang):
         super().__init__(parent=frame, title=title, size=more_choose_size,
                          style=wx.CAPTION | wx.FRAME_FLOAT_ON_PARENT)  # 继承wx.Frame类
         self.main_frame = wx.Panel(self)
         # 设置图标
-        self.icon = wx.Icon('./resource/Clock.ico', wx.BITMAP_TYPE_ICO)
-        self.SetIcon(self.icon)
+        self.SetIcon(main_icon)
         # 初始化从主窗口传入的参数
         self.lang = lang
         # 设置窗口尺寸
@@ -876,6 +941,97 @@ class More_Choose_Windows(wx.Frame):
         self.Destroy()
 
 
+# noinspection PyUnusedLocal
+class Config_Windows(wx.Frame):
+    def __init__(self, parent, title="设置"):
+        super().__init__(parent=frame, title=title, size=config_size,
+                         style=wx.CAPTION | wx.FRAME_FLOAT_ON_PARENT)  # 继承wx.Frame类
+        self.main_frame = wx.Panel(self)
+        GUI_size = [(160, 25), (100, 40)]
+        pos_Y = [10, 35, 60, 85, 110, 135, 155, 200]
+        self.choose_func_text = wx.StaticText(self.main_frame, label='是否允许剧透内容（国际服6.0等）：', pos=(10, pos_Y[0]))
+        self.JuTou_T = wx.RadioButton(self.main_frame, pos=(100, pos_Y[1]), name='JuTou_T', label='允许',
+                                      style=wx.RB_GROUP)
+        self.JuTou_F = wx.RadioButton(self.main_frame, pos=(200, pos_Y[1]), name='JuTou_F', label='不允许')
+        self.choose_func_text = wx.StaticText(self.main_frame, label='是否允许自动检查更新：', pos=(10, pos_Y[2]))
+        self.Update_T = wx.RadioButton(self.main_frame, pos=(100, pos_Y[3]), name='Update_T', label='启用',
+                                       style=wx.RB_GROUP)
+        self.Update_F = wx.RadioButton(self.main_frame, pos=(200, pos_Y[3]), name='Update_F', label='禁用')
+        self.choose_func_text = wx.StaticText(self.main_frame, label='是否加入体验改善计划（匿名上报数据至google analytics）：',
+                                              pos=(10, pos_Y[4]))
+        self.GA_T = wx.RadioButton(self.main_frame, pos=(100, pos_Y[5]), name='GA_T', label='启用', style=wx.RB_GROUP)
+        self.GA_F = wx.RadioButton(self.main_frame, pos=(200, pos_Y[5]), name='GA_F', label='禁用')
+        self.more_about_GA = lib_btn.ThemedGenBitmapTextButton(self.main_frame, size=GUI_size[0], pos=(90, pos_Y[6]),
+                                                               bitmap=None, label='了解更多有关体验改善计划', name='more_about_GA')
+        self.Bind(wx.EVT_BUTTON, self.event_more_about_GA, self.more_about_GA)
+
+        self.save_btn = lib_btn.ThemedGenBitmapTextButton(self.main_frame, size=GUI_size[1], pos=(60, pos_Y[7]),
+                                                          bitmap=None, label='保存并关闭', name='save_btn')
+        self.Bind(wx.EVT_BUTTON, self.event_save_config, self.save_btn)
+        self.cancel_btn = lib_btn.ThemedGenBitmapTextButton(self.main_frame, size=GUI_size[1], pos=(190, pos_Y[7]),
+                                                            bitmap=None, label='不保存退出', name='cancel_btn')
+        self.Bind(wx.EVT_BUTTON, self.event_cancel, self.cancel_btn)
+        self.Bind(wx.EVT_CLOSE, self.event_cancel)
+        # region 用于读取当前配置
+        try:
+            with open("conf/config.json", "r", encoding="utf-8") as f:
+                config_json = json.load(f)
+                if config_json.get('is_can_DLC_6') is False:
+                    self.JuTou_F.SetValue(True)
+                if config_json.get('is_auto_update') is False:
+                    self.Update_F.SetValue(True)
+                if config_json.get('is_GA') is False:
+                    self.GA_F.SetValue(True)
+        except FileNotFoundError:
+            pass
+        # endregion
+
+        self.Centre()
+
+    @staticmethod
+    def event_more_about_GA(event):
+        title = "关于体验改善计划"
+        msg_text = "体验改善计划基于google analytics V3（简称GA3），利用GA3提供的接口，上报开发者需要的参数。" \
+                   "与一般使用GA3不同，本工具使用GA3时，对起到识别作用的计算机名和UUID3进行了MD5加密。且报送的报告中不会包含与使用者隐私相关的信息。\n" \
+                   "报送的信息只包括：【已MD5加密的识别码】、【系统信息】、【屏幕分辨率】、【使用功能】、【当前时间戳】。 "
+        more_about_GA_md = wx.MessageDialog(None, msg_text, title, wx.OK | wx.ICON_INFORMATION)
+        more_about_GA_md.ShowModal()
+        more_about_GA_md.Destroy()
+
+    def event_save_config(self, event):
+        write_dict = {}
+        if self.JuTou_T.GetValue() is True:
+            write_dict['is_can_DLC_6'] = True
+        else:
+            write_dict['is_can_DLC_6'] = False
+        if self.Update_T.GetValue() is True:
+            write_dict['is_auto_update'] = True
+        else:
+            write_dict['is_auto_update'] = False
+            ga.increase_counter(name="关闭自动更新功能", category="关闭自动更新功能", title="设置",
+                                other_parameter={"cd1": "update"})
+        if self.GA_T.GetValue() is True:
+            write_dict['is_GA'] = True
+        else:
+            ga.increase_counter(name="关闭GA功能", category="关闭GA功能", title="设置",
+                                other_parameter={"cd1": "GA"})
+            write_dict['is_GA'] = False
+        with open("./conf/config.json", "w", encoding="utf-8") as f:
+            json.dump(write_dict, f)
+        globals()['is_auto_update'] = write_dict.get('is_auto_update')
+        globals()['is_can_DLC_6'] = write_dict.get('is_can_DLC_6')
+        globals()['is_GA'] = write_dict.get('is_GA')
+        frame.Show(True)  # 重新显示主窗口
+        globals()['auto_check_update'] = Check_Update()
+        auto_check_update.setDaemon(True)
+        auto_check_update.start()  # 开启时自动检查更新一次
+        self.Destroy()
+
+    def event_cancel(self, event):
+        frame.Show(True)  # 重新显示主窗口
+        self.Destroy()
+
+
 if __name__ == '__main__':
     # 启动窗口
     app = wx.App(False)
@@ -888,24 +1044,25 @@ if __name__ == '__main__':
     spk = win32com.client.Dispatch("SAPI.SpVoice")
     spk_jp = win32com.client.Dispatch("SAPI.SpVoice")
     tts('')
-
+    # 实例化谷歌分析
+    ga = google_analytics()
     # 导入采集时钟
     try:
         clock = pd.read_csv("./resource/list.csv", encoding='UTF-8-sig')
         pd.set_option('display.max_rows', None)
-        # select_0 = clock[clock['开始ET']==0].head()
         csv_cant_read = False
-    except:
+    except BaseException:
         csv_cant_read = True
     LingSha_list = ['精选白光灵砂', '精选大地灵砂', '精选大树灵砂', '精选丰饶灵砂', '精选古树灵砂', '精选黑暗灵砂', '精选黄昏灵砂', '精选极光灵砂', '精选巨树灵砂', '精选巨岩灵砂',
                     '精选雷鸣灵砂', '精选雷之晶簇', '精选闪光灵砂', '精选微光灵砂', '精选险山灵砂', '精选晓光灵砂', '精选晓月灵砂', '精选夜光灵砂', '精选悠久灵砂']
+    JingZhi_list = []  # 精制魔晶石备用
     choose_dict = {
         0: "",
         1: " (clock['类型'] == '白票收藏品')",
         2: " (clock['类型'] == '紫票收藏品')",
         3: " clock.类型.isin(LingSha_list)",
         4: " (clock['类型'].str.contains('传说'))",
-        5: " (clock['类型'] == '传说1星')",
+        5: " (clock['类型'] == '传说1星')",  # "(clock.材料名JP.isin(JingZhi_list)
         6: " (clock['类型'] == '水晶')",
         7: " (clock['类型'] == '晶簇')",
 
@@ -930,29 +1087,35 @@ if __name__ == '__main__':
         int(datetime.datetime.utcfromtimestamp((time.time() * 1440 / 70) % 86400).strftime("%M")))
 
     # 读取配置文件
+    if os.path.exists(r'./conf') is False:
+        os.mkdir("conf")
     try:
-        with open("./resource/config.json", "r") as f:
+        with open("./conf/config.json", "r", encoding="utf-8") as f:
             config_json = json.load(f)
             is_auto_update = config_json.get('is_auto_update') if config_json.get(
                 'is_auto_update') is not None else True
             is_can_DLC_6 = config_json.get('is_can_DLC_6') if config_json.get('is_can_DLC_6') is not None else True
+            is_GA = config_json.get('is_GA') if config_json.get('is_GA') is not None else True
             config_cant_read = False
-    except:
+    except FileNotFoundError:
         is_auto_update = False
         is_can_DLC_6 = False
+        is_GA = False
         config_cant_read = True
 
     # 窗口大小设定
     main_size = (1330, 768)
     more_choose_size = (365, 600)
+    config_size = (365, 300)
 
     # 实例化窗口
+    main_icon = wx.Icon('./resource/Clock.ico', wx.BITMAP_TYPE_ICO)
     frame = MainWindow(None, title="FFXIV-Gatherer-Clock Ver{0}".format(version))
     frame.SetMaxSize(main_size)
     frame.SetMinSize(main_size)
     if config_cant_read is True:
         frame.new_config()
     else:
-        frame.transfer_config(is_can_DLC_6, is_auto_update)
+        frame.transfer_config(is_can_DLC_6, is_auto_update, is_GA)
 
     app.MainLoop()
