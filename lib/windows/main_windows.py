@@ -310,6 +310,7 @@ class MainWindow(wx.Frame):
             img_adress = ('./resource/img/' + img_name + '.jpg')
             img = wx.Image(img_adress, wx.BITMAP_TYPE_ANY).Scale(500, 500)
             self.img_ctrl.SetBitmap(wx.Bitmap(img))
+        self.out_listctrl_next.SetItemState(self.out_listctrl_next.GetFirstSelected(),0,wx.LIST_STATE_SELECTED)
 
     def click_line_in_list_next(self, event):
         click_name = event.GetEventObject().GetItemText(event.GetEventObject().GetFirstSelected())
@@ -329,6 +330,7 @@ class MainWindow(wx.Frame):
             img_adress = ('./resource/img/' + img_name + '.jpg')
             img = wx.Image(img_adress, wx.BITMAP_TYPE_ANY).Scale(500, 500)
             self.img_ctrl.SetBitmap(wx.Bitmap(img))
+        self.out_listctrl.SetItemState(self.out_listctrl.GetFirstSelected(), 0, wx.LIST_STATE_SELECTED)
 
     # 动态根据客户端版本修正语言
     def event_choose_client(self, event):
