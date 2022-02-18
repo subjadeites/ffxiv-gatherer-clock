@@ -45,6 +45,7 @@ except FileNotFoundError:
     is_can_DLC_6 = False
     is_GA = True
     config_cant_read = True
+    is_auto_update = True
     # 实例化谷歌分析
     ga = Google_Analytics()
 
