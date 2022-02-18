@@ -176,8 +176,7 @@ class MainWindow(wx.Frame):
             ga.increase_counter(category="程序操作", name="启动程序", title=title_id(),
                                 other_parameter={"cd1": "start"})
 
-    @staticmethod
-    def OnAbout(self):
+    def OnAbout(self,event):
         dlg = wx.MessageDialog(self,
                                "欢迎使用原生态手搓纯天然本地采集时钟！\n当前程序版本：{0}\n"
                                "当前数据版本：仅国际服6.0，已支持E端物品名\n"
