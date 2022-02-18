@@ -55,19 +55,22 @@ class MainWindow(wx.Frame):
         menubar.Append(update_menu, '帮助')
         self.SetMenuBar(menubar)
         # 设置ET时钟
-        self.Eorzea_clock_out_text = wx.StaticText(self.main_frame, size=(110, 20), pos=(main_size[0] - 165, 5),
+        self.Eorzea_clock_out_text = wx.StaticText(self.main_frame, size=(110, 20), pos=(main_size[0] - 160, 1),
                                                    label="", name='staticText',
                                                    style=2321)
-        wx.Font.AddPrivateFont("resource/XIV_ASAS_EMOJI.ttf")
-        clock_font_et = wx.Font(pointSize=12, family=wx.FONTFAMILY_DEFAULT, style=wx.FONTSTYLE_NORMAL,
+        wx.Font.AddPrivateFont(r"resource/font/XIV_ASAS_EMOJI.ttf")
+        clock_font_et = wx.Font(pointSize=11, family=wx.FONTFAMILY_DEFAULT, style=wx.FONTSTYLE_NORMAL,
                                weight=wx.FONTWEIGHT_NORMAL, underline=False, faceName="XIV AXIS Std ATK for Emoji",
                                encoding=wx.FONTENCODING_DEFAULT)
         self.Eorzea_clock_out_text.SetFont(clock_font_et)
-        self.Eorzea_clock_out = wx.StaticText(self.main_frame, size=(65, 21), pos=(main_size[0] - 90, 5),
+        self.Eorzea_clock_out = wx.StaticText(self.main_frame, size=(65, 20), pos=(main_size[0] - 87, 0),
                                               label=Eorzea_time_start, name='staticText',
                                               style=2321)
 
-        clock_font = wx.Font(12, 74, 90, 400, False, 'Microsoft YaHei UI', 28)
+        # clock_font = wx.Font(12, 74, 90, 400, False, 'Microsoft YaHei UI', 28)
+        clock_font = wx.Font(pointSize=12, family=wx.FONTFAMILY_DEFAULT, style=wx.FONTSTYLE_NORMAL,
+                               weight=wx.FONTWEIGHT_NORMAL, underline=False, faceName="XIV AXIS Std ATK for Emoji",
+                               encoding=wx.FONTENCODING_DEFAULT)
         self.Eorzea_clock_out.SetFont(clock_font)
         self.Eorzea_clock = wx.Timer(self)
         self.Bind(wx.EVT_TIMER, self.Eorzea_time_clock, self.Eorzea_clock)
