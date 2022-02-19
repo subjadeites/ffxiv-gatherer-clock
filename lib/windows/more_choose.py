@@ -4,6 +4,7 @@
 # @Author  : subjadeites
 # @File    : more_choose.py
 import copy
+import json
 
 import pandas as pd
 import wx
@@ -14,7 +15,7 @@ from lib.public import more_choose_size, main_icon, clock
 
 # noinspection PyUnusedLocal
 class More_Choose_Windows(wx.Frame):
-    def __init__(self, parent, title, lang: str = 'JP'):
+    def __init__(self, parent, title, lang: str = 'JP', inherit: list = None):
         super().__init__(parent=parent, title=title, size=more_choose_size,
                          style=wx.CAPTION | wx.FRAME_FLOAT_ON_PARENT)  # 继承wx.Frame类
         self.main_frame = wx.Panel(self)
@@ -22,9 +23,12 @@ class More_Choose_Windows(wx.Frame):
         self.SetIcon(main_icon)
         # 初始化从主窗口传入的参数
         self.lang = lang
+        self.inherit = inherit
         # 设置窗口尺寸
         GUI_size = [(40, 20), (250, 360), (90, 35), (200, 40)]
-        pos_Y = [10, 35, 60, 440, 490]
+        pos_Y = [10, 35, 60, 445, 490]
+        load_GUI_size = []
+        load_pos_Y = []
         # 初始化序列
         self.select_dict = {
             '晓月': clock.loc[(clock.版本归属 == '晓月'), ['材料名' + self.lang]],
@@ -33,6 +37,10 @@ class More_Choose_Windows(wx.Frame):
             '苍天': clock.loc[(clock.版本归属 == '苍天'), ['材料名' + self.lang]],
             '新生': clock.loc[(clock.版本归属 == '新生'), ['材料名' + self.lang]],
         }
+        # TODO:支持跨语言转移存档
+        self.cn = {}
+        self.jp = {}
+        self.en = {}
         # 按钮布局
         self.choose_way_1 = wx.RadioButton(self.main_frame, pos=(180, pos_Y[0]), name='radioButton1', label='全选版本')
         self.Bind(wx.EVT_RADIOBUTTON, self.event_choose_way, self.choose_way_1)
@@ -50,6 +58,8 @@ class More_Choose_Windows(wx.Frame):
         self.Bind(wx.EVT_CHECKBOX, self.event_choose_DLC, self.choose_DLC_5)
         self.choose_items = wx.CheckListBox(self.main_frame, size=GUI_size[1], pos=(50, pos_Y[2]), name='listBox',
                                             choices=[], style=0)
+
+        wx.StaticText(self.main_frame, label='小知识：按顺序点击【全选】→【反选】即可清空所有选择', pos=(15, 425))
         self.select_reverse = lib_btn.ThemedGenBitmapTextButton(self.main_frame, size=GUI_size[2], pos=(75, pos_Y[3]),
                                                                 bitmap=None, label='反选', name='select_reverse')
         self.Bind(wx.EVT_BUTTON, self.event_select_reverse, self.select_reverse)
@@ -59,6 +69,13 @@ class More_Choose_Windows(wx.Frame):
         self.confirm = lib_btn.ThemedGenBitmapTextButton(self.main_frame, size=GUI_size[3], pos=(75, pos_Y[4]),
                                                          bitmap=None, label='确定', name='confirm')
         self.Bind(wx.EVT_BUTTON, self.event_confirm, self.confirm)
+
+        self.load = lib_btn.ThemedGenBitmapTextButton(self.main_frame, size=(140, 35), pos=(330, 50),
+                                                      bitmap=None, label='导入自定义筛选模板', name='load')
+        self.Bind(wx.EVT_BUTTON, self.event_load, self.load)
+        self.save = lib_btn.ThemedGenBitmapTextButton(self.main_frame, size=(140, 35), pos=(330, 100),
+                                                      bitmap=None, label='保存为自定义筛选模板', name='save')
+        self.Bind(wx.EVT_BUTTON, self.event_save, self.save)
         self.Bind(wx.EVT_CLOSE, self.OnClose)
         self.Centre()
 
@@ -70,12 +87,23 @@ class More_Choose_Windows(wx.Frame):
             self.choose_DLC_3.SetValue(False)
             self.choose_DLC_4.SetValue(False)
             self.choose_DLC_5.SetValue(False)
+            self.choose_DLC_1.Enable()
+            self.choose_DLC_2.Enable()
+            self.choose_DLC_3.Enable()
+            self.choose_DLC_4.Enable()
+            self.choose_DLC_5.Enable()
+            self.change_choose_items_list([])
         elif user_choose == "全选版本":
             self.choose_DLC_1.SetValue(True)
             self.choose_DLC_2.SetValue(True)
             self.choose_DLC_3.SetValue(True)
             self.choose_DLC_4.SetValue(True)
             self.choose_DLC_5.SetValue(True)
+            self.choose_DLC_1.Disable()
+            self.choose_DLC_2.Disable()
+            self.choose_DLC_3.Disable()
+            self.choose_DLC_4.Disable()
+            self.choose_DLC_5.Disable()
             self.event_choose_DLC(None)
         if self.lang == 'CN':
             self.choose_DLC_1.SetValue(False)
@@ -103,10 +131,10 @@ class More_Choose_Windows(wx.Frame):
             temp_items_list = self.select_dict.get('新生')
             for i in range(0, len(temp_items_list)):
                 choose_item_list.append(temp_items_list.iloc[i]['材料名' + self.lang])
-        self.change_choose_items_list(choose_item_list)
+        self.change_choose_items_list(choose_item_list,self.inherit)
 
-    def change_choose_items_list(self, items_list: list):
-        have_selected = self.choose_items.GetCheckedStrings()
+    def change_choose_items_list(self, items_list: list, load_list: list = None):  # 修改选择列表
+        have_selected = self.choose_items.GetCheckedStrings() if load_list is None else load_list
         have_selected_list = []
         if len(have_selected) > 0:
             for i in range(0, len(have_selected)):
@@ -121,11 +149,12 @@ class More_Choose_Windows(wx.Frame):
                 result_list.append(i)
         self.choose_items.SetItems(result_list)
         self.choose_items.SetCheckedStrings(have_selected_list)
+        self.inherit = None
 
-    def event_select_all(self, event):
+    def event_select_all(self, event):  # 全选
         self.choose_items.SetCheckedItems(range(0, self.choose_items.Count))
 
-    def event_select_reverse(self, event):
+    def event_select_reverse(self, event):  # 反选
         have_select_items = self.choose_items.GetCheckedItems()
         select_reverse_list = []
         for i in range(0, self.choose_items.Count):
@@ -133,13 +162,72 @@ class More_Choose_Windows(wx.Frame):
                 select_reverse_list.append(i)
         self.choose_items.SetCheckedItems(select_reverse_list)
 
-    def event_confirm(self, event):
+    def event_confirm(self, event):  # 确定
         from lib.windows import frame
         select_result = self.choose_items.GetCheckedStrings()
         frame.transfer_data(select_result)
         frame.transfer_button_more_select_shown(True)
         frame.button_run.Enable()
         self.Destroy()
+
+    def event_load(self, event):
+        load = wx.MessageDialog(None, "是否导入自定义筛选模板", "导入自定义筛选模板", wx.YES_NO | wx.ICON_INFORMATION)
+        if load.ShowModal() == wx.ID_YES:
+            try:
+                with open("./conf/more_choose.json", "r", encoding="utf-8") as f:
+                    load = json.load(f)
+                self.change_choose_items_list(load.get('detail'), load.get('detail'))
+                if load.get('lang') != self.lang:
+                    md = wx.MessageDialog(None, """暂不支持跨语言导入存档。\n请等待后续版本开发，在做了在做了！""", "导入失败")  # 语法是(self, 内容, 标题, ID)
+                    md.ShowModal()
+                    md.Destroy()
+            except FileNotFoundError:
+                md = wx.MessageDialog(None, """未找到自定义筛选模板文件。\n请重新创建模板。""", "导入失败")  # 语法是(self, 内容, 标题, ID)
+                md.ShowModal()
+                md.Destroy()
+            except BaseException:
+                md = wx.MessageDialog(None, """自定义模板文件损坏。\n请重新创建模板。""", "导入失败")  # 语法是(self, 内容, 标题, ID)
+                md.ShowModal()
+                md.Destroy()
+            else:
+                self.choose_DLC_1.SetValue(False)
+                self.choose_DLC_2.SetValue(False)
+                self.choose_DLC_3.SetValue(False)
+                self.choose_DLC_4.SetValue(False)
+                self.choose_DLC_5.SetValue(False)
+                self.choose_DLC_1.Enable()
+                self.choose_DLC_2.Enable()
+                self.choose_DLC_3.Enable()
+                self.choose_DLC_4.Enable()
+                self.choose_DLC_5.Enable()
+                self.choose_way_2.SetValue(True)
+                if self.lang == 'CN':
+                    self.choose_DLC_1.SetValue(False)
+                    self.choose_DLC_1.Disable()
+        else:
+            pass
+
+    def event_save(self, event):
+        save = wx.MessageDialog(None, "是否导出保存自定义筛选模板", "保存自定义筛选模板", wx.YES_NO | wx.ICON_INFORMATION)
+        if save.ShowModal() == wx.ID_YES:
+            try:
+                with open("./conf/more_choose.json", "w", encoding="utf-8") as f:
+                    have_selected = self.choose_items.GetCheckedStrings()
+                    have_selected_list = []
+                    if len(have_selected) > 0:
+                        for i in range(0, len(have_selected)):
+                            have_selected_list.append(have_selected[i])
+                    write_dict = {"sort": 1, "lang": self.lang, "detail": have_selected_list}
+                    json.dump(write_dict, f)
+                    md = wx.MessageDialog(None, """保存成功！""", "导出成功")  # 语法是(self, 内容, 标题, ID)
+                    md.ShowModal()
+                    md.Destroy()
+            except BaseException as err:
+                md = wx.MessageDialog(None, """导出自定义模板文件失败。\n请检查文件权限。""", "导出成功")  # 语法是(self, 内容, 标题, ID)
+                md.ShowModal()
+                md.Destroy()
+        else:
+            pass
 
     def OnClose(self, event):
         from lib.windows import frame

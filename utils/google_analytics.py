@@ -24,7 +24,7 @@ from lib.update import version
 必须要注册V3版本，方法：https://zhuanlan.zhihu.com/p/371973749
 """
 
-# test_mode =  True #测试时打开，不上传
+#test_mode =  True #测试时打开，不上传
 test_mode = False
 
 
@@ -92,6 +92,7 @@ class Google_Analytics:
             'sr': get_screen_size(),
             'an': self.APP_NAME,
             'av': self.VERSION,
+            "cd1": version,  # 用于传递版本号
         }
 
     def push_event(self, category: str, action: str, label=None, value=0, other_parameter: dict = None):

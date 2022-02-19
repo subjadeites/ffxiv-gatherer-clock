@@ -17,7 +17,7 @@ import wx.html2
 
 from lib.clock import Clock_Thread, clock_thread
 from lib.public import main_size, main_icon, ga, clock, Eorzea_time_start, tts, more_choose_size, config_cant_read, \
-    config_size
+    config_size, user_agent
 from lib.update import version, check_update, Check_Update, update_info
 from utils.google_analytics import title_id
 
@@ -60,8 +60,8 @@ class MainWindow(wx.Frame):
                                                    style=2321)
         wx.Font.AddPrivateFont(r"resource/font/XIV_ASAS_EMOJI.ttf")
         clock_font_et = wx.Font(pointSize=11, family=wx.FONTFAMILY_DEFAULT, style=wx.FONTSTYLE_NORMAL,
-                               weight=wx.FONTWEIGHT_NORMAL, underline=False, faceName="XIV AXIS Std ATK for Emoji",
-                               encoding=wx.FONTENCODING_DEFAULT)
+                                weight=wx.FONTWEIGHT_NORMAL, underline=False, faceName="XIV AXIS Std ATK for Emoji",
+                                encoding=wx.FONTENCODING_DEFAULT)
         self.Eorzea_clock_out_text.SetFont(clock_font_et)
         self.Eorzea_clock_out = wx.StaticText(self.main_frame, size=(65, 20), pos=(main_size[0] - 87, 0),
                                               label=Eorzea_time_start, name='staticText',
@@ -69,8 +69,8 @@ class MainWindow(wx.Frame):
 
         # clock_font = wx.Font(12, 74, 90, 400, False, 'Microsoft YaHei UI', 28)
         clock_font = wx.Font(pointSize=12, family=wx.FONTFAMILY_DEFAULT, style=wx.FONTSTYLE_NORMAL,
-                               weight=wx.FONTWEIGHT_NORMAL, underline=False, faceName="XIV AXIS Std ATK for Emoji",
-                               encoding=wx.FONTENCODING_DEFAULT)
+                             weight=wx.FONTWEIGHT_NORMAL, underline=False, faceName="XIV AXIS Std ATK for Emoji",
+                             encoding=wx.FONTENCODING_DEFAULT)
         self.Eorzea_clock_out.SetFont(clock_font)
         self.Eorzea_clock = wx.Timer(self)
         self.Bind(wx.EVT_TIMER, self.Eorzea_time_clock, self.Eorzea_clock)
@@ -170,16 +170,16 @@ class MainWindow(wx.Frame):
         self.Show(True)
         try:
             ga.increase_counter(category="程序操作", name="启动程序", title=title_id(),
-                                other_parameter={"cd1": "start"})
+                                other_parameter={})
             self.accept_online_msg(self)
             globals()["check_update"] = Check_Update()
             check_update.setDaemon(True)
             check_update.start()  # 开启时自动检查更新一次
         except Exception:
             ga.increase_counter(category="程序操作", name="启动程序", title=title_id(),
-                                other_parameter={"cd1": "start"})
+                                other_parameter={})
 
-    def OnAbout(self,event):
+    def OnAbout(self, event):
         dlg = wx.MessageDialog(self,
                                "欢迎使用原生态手搓纯天然本地采集时钟！\n当前程序版本：{0}\n"
                                "当前数据版本：仅国际服6.0，已支持E端物品名\n"
@@ -310,7 +310,7 @@ class MainWindow(wx.Frame):
             img_adress = ('./resource/img/' + img_name + '.jpg')
             img = wx.Image(img_adress, wx.BITMAP_TYPE_ANY).Scale(500, 500)
             self.img_ctrl.SetBitmap(wx.Bitmap(img))
-        self.out_listctrl_next.SetItemState(self.out_listctrl_next.GetFirstSelected(),0,wx.LIST_STATE_SELECTED)
+        self.out_listctrl_next.SetItemState(self.out_listctrl_next.GetFirstSelected(), 0, wx.LIST_STATE_SELECTED)
 
     def click_line_in_list_next(self, event):
         click_name = event.GetEventObject().GetItemText(event.GetEventObject().GetFirstSelected())
@@ -391,7 +391,8 @@ class MainWindow(wx.Frame):
             # region 实例化更多筛选窗口
             from lib.windows import More_Choose_Windows
             more_choose_windows.set_lang(choose_lang_result)
-            self.more_choose_windows = More_Choose_Windows(parent=self, title="自定义筛选", lang=choose_lang_result)
+            self.more_choose_windows = More_Choose_Windows(parent=self, title="自定义筛选", lang=choose_lang_result,
+                                                           inherit=self.more_select_result_list)
             self.more_choose_windows.SetMaxSize(more_choose_size)
             self.more_choose_windows.SetMinSize(more_choose_size)
             self.more_select_result_list = []  # 初始化选择
@@ -485,13 +486,13 @@ class MainWindow(wx.Frame):
             try:
                 try:
                     url = 'https://ghproxy.com/https://raw.githubusercontent.com/subjadeites/ffxiv-gatherer-clock/master/msg.json'
-                    response = requests.get(url, timeout=10)
+                    response = requests.get(url, timeout=10, headers={'User-Agent': user_agent})
                     online_msg_json = eval(response.text)
-                except requests.exceptions.ConnectionError:
+                except BaseException:
                     url = 'https://ffxivclock.gamedatan.com/msg'
-                    response = requests.get(url, timeout=10)
+                    response = requests.get(url, timeout=10, headers={'User-Agent': user_agent})
                     online_msg_json = eval(response.text)
-            except requests.exceptions.ConnectionError:
+            except BaseException:
                 pass
         title = online_msg_json.get('title')
         msg_text = online_msg_json.get('msg')

@@ -12,14 +12,14 @@ import pandas as pd
 import win32com.client
 import wx
 
-from lib.update import check_update
+from lib.update import check_update,user_agent
 from utils.google_analytics import Google_Analytics
 
 # 图标设定
 main_icon = wx.Icon('./resource/Clock.ico', wx.BITMAP_TYPE_ICO)
 # 窗口大小设定
 main_size = (1330, 768)
-more_choose_size = (365, 600)
+more_choose_size = (550, 600)
 config_size = (365, 300)
 
 Eorzea_time_start = "{:02d}：{:02d}".format(
@@ -27,7 +27,7 @@ Eorzea_time_start = "{:02d}：{:02d}".format(
     int(datetime.datetime.utcfromtimestamp((time.time() * 1440 / 70) % 86400).strftime("%M")))
 
 # 读取配置文件
-if os.path.exists(r'./conf') is False:
+if os.path.exists(r'./conf') is False and os.path.exists(r'./lib') is True:
     os.mkdir("conf")
 try:
     with open("./conf/config.json", "r", encoding="utf-8") as f:

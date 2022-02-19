@@ -4,9 +4,9 @@
 # @Author  : subjadeites
 # @File    : main.py
 import wx
+app = wx.App(False)
 
 if __name__ == '__main__':
-    app = wx.App(False)
     from lib.windows import *
     from lib.public import is_can_DLC_6, is_auto_update
 

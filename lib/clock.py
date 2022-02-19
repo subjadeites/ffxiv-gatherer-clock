@@ -9,6 +9,7 @@ from threading import Thread
 import pandas as pd
 
 from lib.public import choose_DLC_dict, choose_ZhiYe_dict, clock, func_select, tts, spk, Eorzea_time, ga
+from utils.google_analytics import title_id
 
 
 # 闹钟核心方法
@@ -158,6 +159,17 @@ def clock_out(lang, Eorzea_time_in, need_tts, func, ZhiYe, lvl_min, lvl_max, cho
         return next_start_time
 
 
+class Count_Et:
+    def __init__(self):
+        self.count = 0
+
+    def run(self):
+        self.count += 1
+
+    def stop(self) -> int:
+        return self.count
+
+
 class Clock_Thread(Thread):
     def __init__(self):
         Thread.__init__(self)
@@ -178,14 +190,20 @@ class Clock_Thread(Thread):
         next_clock_time = self.next_clock_time
         # region google统计埋点
         temp_title = ""
-        func_to_title_dict = {0: "全部", 1: "白票", 2: "紫票", 3: "灵砂", 4: "传说", 5: "包浆", 6: "水晶", 7: "晶簇", }
+        func_to_title_dict = {0: "全部", 1: "白票,", 2: "紫票,", 3: "灵砂,", 4: "传说,", 5: "包浆,", 6: "水晶,", 7: "晶簇,", }
         if self.func == [0]:
-            temp_title = "全部"
+            temp_title = "[全部]"
         else:
             for v in self.func:
                 temp_title += func_to_title_dict.get(v)
-        ga.increase_counter(category=self.client_version, name=self.choose_DLC, title=temp_title,
-                            other_parameter={"cd1": "test"})
+            temp_title = temp_title.split(',')
+            temp_title.remove('')
+            if self.choose_DLC == "自定义筛选":
+                ga.increase_counter(category="启动闹钟", name=self.client_version, title=title_id(),
+                                    other_parameter={"cd3": self.choose_DLC, "cd5": str(self.more_select_result)})
+            else:
+                ga.increase_counter(category="启动闹钟", name=self.client_version, title=title_id(),
+                                    other_parameter={"cd3": self.choose_DLC, "cd4": str(temp_title)})
         # endregion
         while True:
             if self.is_run is False:
@@ -196,12 +214,16 @@ class Clock_Thread(Thread):
                 frame.out_listctrl.Show(False)
                 frame.out_listctrl_next.Show(False)
                 globals()['clock_thread'] = Clock_Thread()
+                ga.increase_counter(category="关闭闹钟", name=self.client_version, title=title_id(),
+                                    other_parameter={"cd2": count_et.stop()})
+                globals()['count_et'] = Count_Et()
                 break
             else:
                 now_Eorzea_hour = Eorzea_time()
-                if (now_Eorzea_hour == 22 or now_Eorzea_hour == 23) and next_clock_time == 0:
+                if now_Eorzea_hour == 23 and next_clock_time == 0:
                     pass
                 elif now_Eorzea_hour >= next_clock_time:
+                    count_et.run()
                     next_clock_time = clock_out(self.lang, now_Eorzea_hour, self.need_tts, self.func, self.ZhiYe,
                                                 self.lvl_min, self.lvl_max, self.choose_DLC, self.client_version,
                                                 self.more_select_result, next_clock_time)
@@ -225,3 +247,4 @@ class Clock_Thread(Thread):
 
 
 clock_thread = Clock_Thread()
+count_et = Count_Et()

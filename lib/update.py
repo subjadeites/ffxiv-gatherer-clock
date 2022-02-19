@@ -10,8 +10,8 @@ from threading import Thread
 import requests
 import wx
 
-version = "1.3.0"
-
+version = "1.3.1"
+user_agent ="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.102 Safari/537.36"
 
 # 更新弹窗
 def update_info(version_online, version_online_describe: str = "未写入新版本介绍"):
@@ -55,21 +55,21 @@ class Check_Update(Thread):
                 try:
                     try:
                         url = 'https://ghproxy.com/https://raw.githubusercontent.com/subjadeites/ffxiv-gatherer-clock/master/version.json'
-                        response = requests.get(url, timeout=7)
+                        response = requests.get(url, timeout=7, headers={'User-Agent': user_agent})
                         version_online_json = eval(response.text)
                         version_online = version_online_json.get("Version")
                         version_online_describe = version_online_json.get("describe")
                         version_online_as_tuple = tuple(int(x) for x in version_online.split('.'))
                         version_as_tuple = tuple(int(x) for x in version.split('.'))
-                    except requests.exceptions.ConnectionError:
+                    except BaseException:
                         url = 'https://ffxivclock.gamedatan.com/version'
-                        response = requests.get(url, timeout=7)
+                        response = requests.get(url, timeout=7, headers={'User-Agent': user_agent})
                         version_online_json = eval(response.text)
                         version_online = version_online_json.get("Version")
                         version_online_describe = version_online_json.get("describe")
                         version_online_as_tuple = tuple(int(x) for x in version_online.split('.'))
                         version_as_tuple = tuple(int(x) for x in version.split('.'))
-                except requests.exceptions.ConnectionError:
+                except BaseException:
                     self.is_run = False
                     update_error_dlg = _update_error_dlg()
                     update_error_dlg.ShowModal()

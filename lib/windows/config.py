@@ -8,9 +8,9 @@ import json
 import wx
 import wx.lib.buttons as lib_btn
 
-from lib.public import config_size, ga,main_icon,is_GA
+from lib.public import config_size, ga, main_icon, is_GA
 from lib.update import Check_Update, check_update
-from utils.google_analytics import Google_Analytics,title_id
+from utils.google_analytics import Google_Analytics, title_id
 
 
 # noinspection PyUnusedLocal
@@ -82,11 +82,11 @@ class Config_Windows(wx.Frame):
             write_dict['is_auto_update'] = True
         else:
             write_dict['is_auto_update'] = False
-            ga.increase_counter(category="设置操作", name="关闭自动更新功能", title=title_id(), other_parameter={"cd1": "update"})
+            ga.increase_counter(category="设置操作", name="关闭自动更新功能", title=title_id(), other_parameter={})
         if self.GA_T.GetValue() is True:
             write_dict['is_GA'] = True
         else:
-            ga.increase_counter(category="设置操作", name="关闭GA功能", title=title_id(), other_parameter={"cd1": "GA"})
+            ga.increase_counter(category="设置操作", name="关闭GA功能", title=title_id(), other_parameter={})
             write_dict['is_GA'] = False
         with open("./conf/config.json", "w", encoding="utf-8") as f:
             json.dump(write_dict, f)
