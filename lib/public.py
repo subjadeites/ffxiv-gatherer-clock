@@ -40,12 +40,15 @@ try:
         config_cant_read = False
         # 实例化谷歌分析
         ga = Google_Analytics(can_upload=is_GA)
+        # 加入test功能，目前用于强开国服6.0,配置文件中没写就是不允许强开。
+        is_test = config_json.get('is_test') if config_json.get('is_can_DLC_6') is not None else False
 except FileNotFoundError:
     check_update.set_is_auto_update(False)
     is_can_DLC_6 = False
     is_GA = True
     config_cant_read = True
     is_auto_update = True
+    is_test = False # 加入test功能，目前用于强开国服6.0
     # 实例化谷歌分析
     ga = Google_Analytics()
 

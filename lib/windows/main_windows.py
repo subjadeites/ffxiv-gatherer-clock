@@ -17,7 +17,7 @@ import wx.html2
 
 from lib.clock import Clock_Thread, clock_thread
 from lib.public import main_size, main_icon, ga, clock, Eorzea_time_start, tts, more_choose_size, config_cant_read, \
-    config_size, user_agent
+    config_size, user_agent,is_test
 from lib.update import version, check_update, Check_Update, update_info
 from utils.google_analytics import title_id
 
@@ -212,11 +212,11 @@ class MainWindow(wx.Frame):
         if self.lvl_min.GetValue() > self.lvl_max.GetValue():
             self.lvl_min.SetValue(self.lvl_max.GetValue())
             wx.MessageDialog(self, "等级下限不应当高于等级上限！", "等级设置错误").ShowModal()
-        elif self.choose_client.GetSelection() == 1 and self.choose_DLC.GetSelection() == 0:
+        elif self.choose_client.GetSelection() == 1 and self.choose_DLC.GetSelection() == 0 and time.time() < 1647396000 and is_test is False :
             self.choose_DLC.SetSelection(1)
-            wx.MessageDialog(self, "国服尚未更新晓月版本", "DLC选择错误").ShowModal()
+            wx.MessageDialog(self, "国服将于3月16日上午10点国服更新6.0", "DLC选择错误").ShowModal()  # TODO:国服6.0正式版删除本句
         else:
-            if self.is_can_DLC_6 is False:
+            if self.is_can_DLC_6 is False and time.time() < 1647446400 and is_test is False:  # TODO:国服6.0正式版删除本句
                 FangJuTouJingCha = wx.MessageDialog(None,
                                                     "按照您的防剧透设定，您不可使用『晓月』DLC的闹钟\n点击【是】可以将设定改为允许剧透模式\n点击【否】保持禁止剧透模式并关闭窗口",
                                                     "剧透警告！！！", wx.YES_NO | wx.ICON_QUESTION)
@@ -340,7 +340,7 @@ class MainWindow(wx.Frame):
         else:
             self.choose_lang.SetItemLabel(0, "中文CN")
             self.choose_lang.SetItemLabel(1, "中文CN")
-            if self.choose_DLC.GetSelection() == 0:  # TODO:国服6.0上线后删除
+            if self.choose_DLC.GetSelection() == 0 and time.time() < 1647396000 and is_test is False:  # TODO:国服6.0上线后删除
                 self.choose_DLC.SetSelection(1)
 
     # 自定义筛选时禁用简单筛选框，并弹出自定义筛选框
@@ -448,7 +448,7 @@ class MainWindow(wx.Frame):
             self.lvl_min.SetValue(80)
             self.lvl_max.SetValue(90)
             # TODO：国服更新6.0后需修改
-            if self.choose_client.GetSelection() == 1:
+            if self.choose_client.GetSelection() == 1 and time.time() < 1647396000 and is_test is False:
                 self.choose_DLC.SetSelection(2)
             else:
                 self.choose_DLC.SetSelection(0)
@@ -511,6 +511,7 @@ class MainWindow(wx.Frame):
                 online_msg_md.ShowModal()
                 online_msg_md.Destroy()
                 try:
+                    win32api.SetFileAttributes(r'./conf/online_msg_read', win32con.FILE_ATTRIBUTE_NORMAL)
                     with open(r'./conf/online_msg_read', "w", encoding="UTF-8") as f:
                         f.write(online_msg_json_md5)
                     win32api.SetFileAttributes(r'./conf/online_msg_read', win32con.FILE_ATTRIBUTE_HIDDEN)
@@ -521,8 +522,10 @@ class MainWindow(wx.Frame):
                 online_msg_md.ShowModal()
                 online_msg_md.Destroy()
                 try:
-                    with open(r'./conf/online_msg_read', "w", encoding="UTF-8") as f:
+                    win32api.SetFileAttributes(r'./conf/online_msg_read', win32con.FILE_ATTRIBUTE_NORMAL)
+                    with open(r'./conf/online_msg_read', "r+w", encoding="UTF-8") as f:
                         f.write(online_msg_json_md5)
+                    win32api.SetFileAttributes(r'./conf/online_msg_read', win32con.FILE_ATTRIBUTE_HIDDEN)
                 except BaseException:
                     pass
             else:

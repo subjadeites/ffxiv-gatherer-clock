@@ -8,7 +8,7 @@ from threading import Thread
 
 import pandas as pd
 
-from lib.public import choose_DLC_dict, choose_ZhiYe_dict, clock, func_select, tts, spk, Eorzea_time, ga
+from lib.public import choose_DLC_dict, choose_ZhiYe_dict, clock, func_select, tts, spk, Eorzea_time, ga,is_test
 from utils.google_analytics import title_id
 
 
@@ -23,7 +23,7 @@ def clock_out(lang, Eorzea_time_in, need_tts, func, ZhiYe, lvl_min, lvl_max, cho
     else:
         next_start_time = Eorzea_time_in + 1
     # TODO:国服更新6.0后需修改
-    if client_verion == '国服' and choose_DLC != '自定义筛选':
+    if client_verion == '国服' and choose_DLC != '自定义筛选' and time.time() < 1647396000 and is_test is False:
         choose_DLC = '国服全部'
 
     # 筛选用字段准备
