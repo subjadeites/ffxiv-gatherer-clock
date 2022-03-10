@@ -5,6 +5,7 @@
 # @File    : main_windows.py
 import datetime
 import json
+import os
 import time
 import webbrowser
 from hashlib import md5
@@ -511,7 +512,8 @@ class MainWindow(wx.Frame):
                 online_msg_md.ShowModal()
                 online_msg_md.Destroy()
                 try:
-                    win32api.SetFileAttributes(r'./conf/online_msg_read', win32con.FILE_ATTRIBUTE_NORMAL)
+                    if os.path.exists(r'./conf/online_msg_read') is True:
+                        win32api.SetFileAttributes(r'./conf/online_msg_read', win32con.FILE_ATTRIBUTE_NORMAL)
                     with open(r'./conf/online_msg_read', "w", encoding="UTF-8") as f:
                         f.write(online_msg_json_md5)
                     win32api.SetFileAttributes(r'./conf/online_msg_read', win32con.FILE_ATTRIBUTE_HIDDEN)
@@ -522,7 +524,8 @@ class MainWindow(wx.Frame):
                 online_msg_md.ShowModal()
                 online_msg_md.Destroy()
                 try:
-                    win32api.SetFileAttributes(r'./conf/online_msg_read', win32con.FILE_ATTRIBUTE_NORMAL)
+                    if os.path.exists(r'./conf/online_msg_read') is True:
+                        win32api.SetFileAttributes(r'./conf/online_msg_read', win32con.FILE_ATTRIBUTE_NORMAL)
                     with open(r'./conf/online_msg_read', "r+w", encoding="UTF-8") as f:
                         f.write(online_msg_json_md5)
                     win32api.SetFileAttributes(r'./conf/online_msg_read', win32con.FILE_ATTRIBUTE_HIDDEN)
