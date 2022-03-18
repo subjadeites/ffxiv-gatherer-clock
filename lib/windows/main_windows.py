@@ -32,7 +32,7 @@ class MainWindow(wx.Frame):
         # 初始化需要传递/需要使用的变量
         self.more_select_result_list = []
         self.is_auto_update = True
-        self.is_can_DLC_6 = True
+        self.default_client = True
         self.is_GA = True
         # 设置图标
         self.SetIcon(main_icon)
@@ -213,75 +213,57 @@ class MainWindow(wx.Frame):
         if self.lvl_min.GetValue() > self.lvl_max.GetValue():
             self.lvl_min.SetValue(self.lvl_max.GetValue())
             wx.MessageDialog(self, "等级下限不应当高于等级上限！", "等级设置错误").ShowModal()
-        elif self.choose_client.GetSelection() == 1 and self.choose_DLC.GetSelection() == 0 and time.time() < 1647396000 and is_test is False :
-            self.choose_DLC.SetSelection(1)
-            wx.MessageDialog(self, "国服将于3月16日上午10点国服更新6.0", "DLC选择错误").ShowModal()  # TODO:国服6.0正式版删除本句
         else:
-            if self.is_can_DLC_6 is False and time.time() < 1647446400 and is_test is False:  # TODO:国服6.0正式版删除本句
-                FangJuTouJingCha = wx.MessageDialog(None,
-                                                    "按照您的防剧透设定，您不可使用『晓月』DLC的闹钟\n点击【是】可以将设定改为允许剧透模式\n点击【否】保持禁止剧透模式并关闭窗口",
-                                                    "剧透警告！！！", wx.YES_NO | wx.ICON_QUESTION)
-
-                if FangJuTouJingCha.ShowModal() == wx.ID_YES:
-                    self.is_can_DLC_6 = True
-                    with open("./conf/config.json", "w", encoding="utf-8") as f:
-                        write_dict = {'is_auto_update': self.is_auto_update, 'is_can_DLC_6': self.is_can_DLC_6,
-                                      'is_GA': self.is_GA}
-                        json.dump(write_dict, f)
-                else:
-                    pass
-                FangJuTouJingCha.Destroy()
+            if self.choose_client.GetSelection() == 0:
+                choose_lang_result = ['JP', 'EN'][self.choose_lang.GetSelection()]  # 确定语言
+            elif self.choose_client.GetSelection() == 1:
+                choose_lang_result = 'CN'
             else:
-                if self.choose_client.GetSelection() == 0:
-                    choose_lang_result = ['JP', 'EN'][self.choose_lang.GetSelection()]  # 确定语言
-                elif self.choose_client.GetSelection() == 1:
-                    choose_lang_result = 'CN'
-                else:
-                    choose_lang_result = 'JP'
-                choose_TTS_result = [True, False][self.choose_TTS.GetSelection()]  # 确定TTS开关
-                choose_ZhiYe_result = self.choose_ZhiYe.GetSelection()
-                choose_func_result = {}  # 需要对应处理多选框
-                if self.choose_select_way.GetSelection() == 0:
-                    choose_func_result[1] = self.choose_func_1.IsChecked()  # 检测白票是否勾选
-                    choose_func_result[2] = self.choose_func_2.IsChecked()  # 检测紫票是否勾选
-                    choose_func_result[3] = self.choose_func_3.IsChecked()  # 检测灵砂是否勾选
-                    choose_func_result[4] = self.choose_func_4.IsChecked()  # 检测传说是否勾选
-                    choose_func_result[5] = self.choose_func_5.IsChecked()  # 检测传说精制是否勾选
-                    choose_func_result[6] = self.choose_func_6.IsChecked()  # 检测水晶是否勾选
-                    choose_func_result[7] = self.choose_func_7.IsChecked()  # 检测晶簇是否勾选
-                    choose_DLC_result = ['晓月', '全部', '漆黑', '红莲', '苍天', '新生'][
-                        self.choose_DLC.GetSelection()]  # 简单筛选DLC版本
-                else:
-                    choose_DLC_result = '自定义筛选'
-                lvl_min_result = self.lvl_min.GetValue()
-                lvl_max_result = self.lvl_max.GetValue()
-                choose_client_result = ['国际服', '国服'][self.choose_client.GetSelection()]  # 确定客户端版本
+                choose_lang_result = 'JP'
+            choose_TTS_result = [True, False][self.choose_TTS.GetSelection()]  # 确定TTS开关
+            choose_ZhiYe_result = self.choose_ZhiYe.GetSelection()
+            choose_func_result = {}  # 需要对应处理多选框
+            if self.choose_select_way.GetSelection() == 0:
+                choose_func_result[1] = self.choose_func_1.IsChecked()  # 检测白票是否勾选
+                choose_func_result[2] = self.choose_func_2.IsChecked()  # 检测紫票是否勾选
+                choose_func_result[3] = self.choose_func_3.IsChecked()  # 检测灵砂是否勾选
+                choose_func_result[4] = self.choose_func_4.IsChecked()  # 检测传说是否勾选
+                choose_func_result[5] = self.choose_func_5.IsChecked()  # 检测传说精制是否勾选
+                choose_func_result[6] = self.choose_func_6.IsChecked()  # 检测水晶是否勾选
+                choose_func_result[7] = self.choose_func_7.IsChecked()  # 检测晶簇是否勾选
+                choose_DLC_result = ['晓月', '全部', '漆黑', '红莲', '苍天', '新生'][
+                    self.choose_DLC.GetSelection()]  # 简单筛选DLC版本
+            else:
+                choose_DLC_result = '自定义筛选'
+            lvl_min_result = self.lvl_min.GetValue()
+            lvl_max_result = self.lvl_max.GetValue()
+            choose_client_result = ['国际服', '国服'][self.choose_client.GetSelection()]  # 确定客户端版本
 
-                self.button_more_select.Disable()
-                event.GetEventObject().Disable()
-                self.result_box_text_1.Show(True)
-                self.button_stop.Enable()
-                self.result_box_text_2.Show(True)
+            self.button_more_select.Disable()
+            event.GetEventObject().Disable()
+            self.result_box_text_1.Show(True)
+            self.button_stop.Enable()
+            self.result_box_text_2.Show(True)
 
-                # 将func_dict转化为func_list
-                choose_func_list = []
-                for k, v in choose_func_result.items():
-                    if v is True:
-                        choose_func_list.append(k)
-                if not choose_func_list:
-                    choose_func_list = [0]
+            # 将func_dict转化为func_list
+            choose_func_list = []
+            for k, v in choose_func_result.items():
+                if v is True:
+                    choose_func_list.append(k)
+            if not choose_func_list:
+                choose_func_list = [0]
 
-                # 传入参数到闹钟线程
-                globals()['clock_thread'] = Clock_Thread()
-                clock_thread.set_values(choose_lang_result, choose_TTS_result, choose_func_list, choose_ZhiYe_result,
-                                        lvl_min_result, lvl_max_result, choose_DLC_result, choose_client_result,
-                                        self.more_select_result_list)
-                # 启动线程
-                self.result_box_text.Show(False)
-                self.out_listctrl.Show(True)
-                self.out_listctrl_next.Show(True)
-                clock_thread.setDaemon(True)
-                clock_thread.start()
+            # 传入参数到闹钟线程
+            globals()['clock_thread'] = Clock_Thread()
+            clock_thread.set_values(choose_lang_result, choose_TTS_result, choose_func_list, choose_ZhiYe_result,
+                                    lvl_min_result, lvl_max_result, choose_DLC_result, choose_client_result,
+                                    self.more_select_result_list)
+            # 启动线程
+            self.result_box_text.Show(False)
+            self.out_listctrl.Show(True)
+            self.out_listctrl_next.Show(True)
+            clock_thread.setDaemon(True)
+            clock_thread.start()
 
     # 停止闹钟按钮事件
     # TODO:在开启闹钟的时候需要停用所有和筛选设置有关的功能，关闭闹钟的时候重新启用
@@ -341,8 +323,6 @@ class MainWindow(wx.Frame):
         else:
             self.choose_lang.SetItemLabel(0, "中文CN")
             self.choose_lang.SetItemLabel(1, "中文CN")
-            if self.choose_DLC.GetSelection() == 0 and time.time() < 1647396000 and is_test is False:  # TODO:国服6.0上线后删除
-                self.choose_DLC.SetSelection(1)
 
     # 自定义筛选时禁用简单筛选框，并弹出自定义筛选框
     def event_choose_select_way(self, event):
@@ -448,11 +428,7 @@ class MainWindow(wx.Frame):
         elif self.choose_func_5.IsChecked() is True:
             self.lvl_min.SetValue(80)
             self.lvl_max.SetValue(90)
-            # TODO：国服更新6.0后需修改
-            if self.choose_client.GetSelection() == 1 and time.time() < 1647396000 and is_test is False:
-                self.choose_DLC.SetSelection(2)
-            else:
-                self.choose_DLC.SetSelection(0)
+            self.choose_DLC.SetSelection(0)
 
     def new_config(self, *args):
         from lib.windows import Config_Windows
@@ -463,10 +439,14 @@ class MainWindow(wx.Frame):
             config_windows.Show(True)
             self.Show(False)
 
-    def transfer_config(self, _is_can_DLC_6, _is_auto_update, _is_GA):
-        self.is_can_DLC_6 = _is_can_DLC_6
+    def transfer_config(self, _default_client, _is_auto_update, _is_GA):
+        self.default_client = _default_client
         self.is_auto_update = _is_auto_update
         self.is_GA = _is_GA
+        if self.default_client is False:
+            self.choose_client.SetSelection(1)
+            self.choose_lang.SetItemLabel(0, "中文CN")
+            self.choose_lang.SetItemLabel(1, "中文CN")
 
     def transfer_button_more_select_shown(self, shown):
         if shown is True:

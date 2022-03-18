@@ -35,16 +35,19 @@ try:
         is_auto_update = config_json.get('is_auto_update') if config_json.get(
             'is_auto_update') is not None else True
         check_update.set_is_auto_update(is_auto_update)
-        is_can_DLC_6 = config_json.get('is_can_DLC_6') if config_json.get('is_can_DLC_6') is not None else True
+        if config_json.get('is_can_DLC_6') is True:
+            default_client = False
+        else:
+            default_client = config_json.get('default_client') if config_json.get('default_client') is not None else True
         is_GA = config_json.get('is_GA') if config_json.get('is_GA') is not None else True
         config_cant_read = False
         # 实例化谷歌分析
         ga = Google_Analytics(can_upload=is_GA)
         # 加入test功能，目前用于强开国服6.0,配置文件中没写就是不允许强开。
-        is_test = config_json.get('is_test') if config_json.get('is_can_DLC_6') is not None else False
+        is_test = config_json.get('is_test') if config_json.get('default_client') is not None else False
 except FileNotFoundError:
     check_update.set_is_auto_update(False)
-    is_can_DLC_6 = False
+    default_client = True
     is_GA = True
     config_cant_read = True
     is_auto_update = True

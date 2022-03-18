@@ -22,10 +22,10 @@ class Config_Windows(wx.Frame):
         self.SetIcon(main_icon)
         GUI_size = [(160, 25), (100, 40)]
         pos_Y = [10, 35, 60, 85, 110, 135, 155, 200]
-        self.choose_func_text = wx.StaticText(self.main_frame, label='是否允许剧透内容（国际服6.0等）：', pos=(10, pos_Y[0]))
-        self.JuTou_T = wx.RadioButton(self.main_frame, pos=(100, pos_Y[1]), name='JuTou_T', label='允许',
+        self.choose_func_text = wx.StaticText(self.main_frame, label='打开后默认游戏版本：', pos=(10, pos_Y[0]))
+        self.version_SE = wx.RadioButton(self.main_frame, pos=(100, pos_Y[1]), name='version_SE', label='国际服',
                                       style=wx.RB_GROUP)
-        self.JuTou_F = wx.RadioButton(self.main_frame, pos=(200, pos_Y[1]), name='JuTou_F', label='不允许')
+        self.version_cn = wx.RadioButton(self.main_frame, pos=(200, pos_Y[1]), name='version_cn', label='国服')
         self.choose_func_text = wx.StaticText(self.main_frame, label='是否允许自动检查更新：', pos=(10, pos_Y[2]))
         self.Update_T = wx.RadioButton(self.main_frame, pos=(100, pos_Y[3]), name='Update_T', label='启用',
                                        style=wx.RB_GROUP)
@@ -49,8 +49,8 @@ class Config_Windows(wx.Frame):
         try:
             with open("conf/config.json", "r", encoding="utf-8") as f:
                 config_json = json.load(f)
-                if config_json.get('is_can_DLC_6') is False:
-                    self.JuTou_F.SetValue(True)
+                if config_json.get('default_client') is False:
+                    self.version_cn.SetValue(True)
                 if config_json.get('is_auto_update') is False:
                     self.Update_F.SetValue(True)
                 if config_json.get('is_GA') is False:
@@ -74,10 +74,10 @@ class Config_Windows(wx.Frame):
     def event_save_config(self, event):
         from lib.windows import frame
         write_dict = {}
-        if self.JuTou_T.GetValue() is True:
-            write_dict['is_can_DLC_6'] = True
+        if self.version_SE.GetValue() is True:
+            write_dict['default_client'] = True
         else:
-            write_dict['is_can_DLC_6'] = False
+            write_dict['default_client'] = False
         if self.Update_T.GetValue() is True:
             write_dict['is_auto_update'] = True
         else:
@@ -91,7 +91,7 @@ class Config_Windows(wx.Frame):
         with open("./conf/config.json", "w", encoding="utf-8") as f:
             json.dump(write_dict, f)
         globals()['is_auto_update'] = write_dict.get('is_auto_update')
-        globals()['is_can_DLC_6'] = write_dict.get('is_can_DLC_6')
+        globals()[''] = write_dict.get('default_client')
         globals()['is_GA'] = write_dict.get('is_GA')
         globals()['ga'] = Google_Analytics(can_upload=is_GA)
         frame.Show(True)  # 重新显示主窗口

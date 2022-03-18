@@ -1,1 +1,5 @@
-{"is_can_DLC_6": true, "is_auto_update": true, "is_GA": true}
+{
+  "default_client": false,
+  "is_auto_update": true,
+  "is_GA": true
+}
