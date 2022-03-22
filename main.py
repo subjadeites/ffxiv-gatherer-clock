@@ -3,8 +3,12 @@
 # @Time    : 2021/2/7 20:00
 # @Author  : subjadeites
 # @File    : main.py
+import locale
+
 import wx
+
 app = wx.App(False)
+locale.setlocale(locale.LC_ALL, '')
 
 if __name__ == '__main__':
     from lib.windows import *
