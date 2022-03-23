@@ -1,4 +1,4 @@
 {
-  "Version": "1.3.3",
-  "describe": "【6.0国服正式版】\n1.修复了一个locale问题。"
+  "Version": "1.3.5",
+  "describe": "【6.0国服正式版】\n1.修复了csv中两个矿中文译名反了的bug。2.修复了一个locale问题。3.修复了update问题。"
 }
