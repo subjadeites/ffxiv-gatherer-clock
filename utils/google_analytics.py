@@ -24,7 +24,7 @@ from lib.update import version
 必须要注册V3版本，方法：https://zhuanlan.zhihu.com/p/371973749
 """
 
-#test_mode =  True #测试时打开，不上传
+#test_mode = True  # 测试时打开，不上传
 test_mode = False
 
 
@@ -128,7 +128,7 @@ class Google_Analytics:
         :param name: 事件动作
         :param post_type: 事件类型（event-事件;page_view-网页）
         :param title: 事件标签/网页标题
-        :param other_parameter: 其他参数
+        :param other_parameter: 其他参数 cd1：闹钟版本; cd2：使用ET小时数; cd3：筛选模式; cd4：简单筛选选择; cd5:自定义筛选选择
         :return: None
         """
         try:

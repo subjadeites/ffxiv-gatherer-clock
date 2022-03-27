@@ -13,7 +13,6 @@ import wx.lib.buttons as lib_btn
 from lib.public import more_choose_size, main_icon, clock
 
 
-# noinspection PyUnusedLocal
 class More_Choose_Windows(wx.Frame):
     def __init__(self, parent, title, lang: str = 'JP', inherit: list = None):
         super().__init__(parent=parent, title=title, size=more_choose_size,

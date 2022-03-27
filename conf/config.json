@@ -1,5 +1,9 @@
 {
   "default_client": false,
   "is_auto_update": true,
-  "is_GA": true
+  "is_GA": true,
+  "top_windows_pos": [
+    1811,
+    172
+  ]
 }

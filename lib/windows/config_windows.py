@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 # @Time    : 2022/2/10 16:55
 # @Author  : subjadeites
-# @File    : config.py
+# @File    : config_windows.py
 import json
 
 import wx
@@ -56,6 +56,8 @@ class Config_Windows(wx.Frame):
                 if config_json.get('is_GA') is False:
                     self.GA_F.SetValue(True)
         except FileNotFoundError:
+            pass
+        except json.decoder.JSONDecodeError:
             pass
         # endregion
 

@@ -8,7 +8,8 @@ from threading import Thread
 
 import pandas as pd
 
-from lib.public import choose_DLC_dict, choose_ZhiYe_dict, clock, func_select, tts, spk, Eorzea_time, ga, is_test,LingSha_list
+from lib.public import choose_DLC_dict, choose_ZhiYe_dict, clock, func_select, tts, spk, Eorzea_time, ga, is_test, \
+    LingSha_list
 from utils.google_analytics import title_id
 
 
@@ -128,6 +129,7 @@ def clock_out(lang, Eorzea_time_in, need_tts, func, ZhiYe, lvl_min, lvl_max, cho
                     frame.out_listctrl_next.SetItem(index, num_i, v[num_i])
                 i += 1
 
+        # tts模块
         if need_tts is True:
             tts_word = ""
             for i in range(0, len(out_list)):
@@ -159,7 +161,32 @@ def clock_out(lang, Eorzea_time_in, need_tts, func, ZhiYe, lvl_min, lvl_max, cho
                     should_tss = True
             if should_tss is True:
                 spk.Speak("时限已刷新！")
+
+        # 将输入同步进悬浮窗模块
+        trans_top_windows_data(out_list, out_list_next,lang)
+
         return next_start_time
+
+
+def trans_top_windows_data(out_list: list, out_list_next: list,choose_lang:str):
+    """
+    将筛选结果传递给悬浮窗
+    :param out_list: clock_out()中得出的当前时间段的时限输出
+    :param out_list_next: clock_out()中得出的下个时间段的时限输出
+    """
+    now_list = [["职能", "道具名", "接近水晶", "地区"]]
+    next_list = [["职能", "道具名", "接近水晶", "地区"]]
+    for i in range(0, len(out_list)):
+        now_list.append([out_list[i][2],out_list[i][0], out_list[i][5],out_list[i][4]])
+    for i in range(0, len(out_list_next)):
+        next_list.append([out_list_next[i][2],out_list_next[i][0], out_list_next[i][5],out_list_next[i][4]])
+    if choose_lang != "CN":
+        top_windows_size = (570, 350)
+    else:
+        top_windows_size = (480, 350)
+    # 导入悬浮窗模块
+    from lib.windows import top_windows
+    top_windows.trans_clock_result(now_list, next_list,top_windows_size)
 
 
 class Count_Et:

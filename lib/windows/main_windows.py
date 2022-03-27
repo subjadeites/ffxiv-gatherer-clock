@@ -18,7 +18,7 @@ import wx.html2
 
 from lib.clock import Clock_Thread, clock_thread
 from lib.public import main_size, main_icon, ga, clock, Eorzea_time_start, tts, more_choose_size, config_cant_read, \
-    config_size, user_agent,is_test
+    config_size, user_agent, is_test
 from lib.update import version, check_update, Check_Update, update_info
 from utils.google_analytics import title_id
 
@@ -34,6 +34,7 @@ class MainWindow(wx.Frame):
         self.is_auto_update = True
         self.default_client = True
         self.is_GA = True
+        self.choose_lang_result = "JP"
         # 设置图标
         self.SetIcon(main_icon)
         # 设置菜单
@@ -125,6 +126,9 @@ class MainWindow(wx.Frame):
         self.button_stop = wx.Button(self.main_frame, -1, "取消闹钟/重新设定", pos=(150, self.line_pos[5]))
         self.button_stop.Disable()
         self.Bind(wx.EVT_BUTTON, self.OnClick_stop, self.button_stop)
+        self.button_top_windows = wx.Button(self.main_frame, -1, "启用置顶悬浮窗", pos=(290, self.line_pos[5]))
+        self.button_top_windows.Show(False)  # 按钮只有开启闹钟再显示
+        self.Bind(wx.EVT_BUTTON, self.OnClick_top_windows, self.button_top_windows)
         # 设置当前时段时限提示
         self.result_box_text_1 = wx.StaticText(self.main_frame, size=(720, 20), pos=(10, self.line_pos[6]),
                                                label="=========当前时段时限点位=========", name='staticText_result',
@@ -180,6 +184,7 @@ class MainWindow(wx.Frame):
             ga.increase_counter(category="程序操作", name="启动程序", title=title_id(),
                                 other_parameter={})
 
+    # 关于
     def OnAbout(self, event):
         dlg = wx.MessageDialog(self,
                                "欢迎使用原生态手搓纯天然本地采集时钟！\n当前程序版本：{0}\n"
@@ -191,6 +196,7 @@ class MainWindow(wx.Frame):
         dlg.ShowModal()  # 显示对话框
         dlg.Destroy()  # 当结束之后关闭对话框
 
+    # 退出事件
     def OnExit(self, event):
         try:
             clock_thread.stop()
@@ -215,11 +221,11 @@ class MainWindow(wx.Frame):
             wx.MessageDialog(self, "等级下限不应当高于等级上限！", "等级设置错误").ShowModal()
         else:
             if self.choose_client.GetSelection() == 0:
-                choose_lang_result = ['JP', 'EN'][self.choose_lang.GetSelection()]  # 确定语言
+                self.choose_lang_result = ['JP', 'EN'][self.choose_lang.GetSelection()]  # 确定语言
             elif self.choose_client.GetSelection() == 1:
-                choose_lang_result = 'CN'
+                self.choose_lang_result = 'CN'
             else:
-                choose_lang_result = 'JP'
+                self.choose_lang_result = 'JP'
             choose_TTS_result = [True, False][self.choose_TTS.GetSelection()]  # 确定TTS开关
             choose_ZhiYe_result = self.choose_ZhiYe.GetSelection()
             choose_func_result = {}  # 需要对应处理多选框
@@ -255,7 +261,7 @@ class MainWindow(wx.Frame):
 
             # 传入参数到闹钟线程
             globals()['clock_thread'] = Clock_Thread()
-            clock_thread.set_values(choose_lang_result, choose_TTS_result, choose_func_list, choose_ZhiYe_result,
+            clock_thread.set_values(self.choose_lang_result, choose_TTS_result, choose_func_list, choose_ZhiYe_result,
                                     lvl_min_result, lvl_max_result, choose_DLC_result, choose_client_result,
                                     self.more_select_result_list)
             # 启动线程
@@ -265,6 +271,8 @@ class MainWindow(wx.Frame):
             clock_thread.setDaemon(True)
             clock_thread.start()
 
+            self.button_top_windows.Show(True)  # 启动闹钟后显示悬浮窗按钮
+
     # 停止闹钟按钮事件
     # TODO:在开启闹钟的时候需要停用所有和筛选设置有关的功能，关闭闹钟的时候重新启用
     def OnClick_stop(self, event):
@@ -272,6 +280,25 @@ class MainWindow(wx.Frame):
         clock_thread.stop()
         tts('')
         self.button_more_select.Enable()
+        self.button_top_windows.Show(False)  # 关闭闹钟后关闭悬浮窗按钮
+
+    # 启用悬浮窗按钮事件
+    def OnClick_top_windows(self, event):
+        from lib.windows import top_windows
+        from lib.config import top_windows_pos
+        top_windows.Move(top_windows_pos())
+        if self.choose_lang_result != "CN":
+            top_windows_size = (570, 350)
+            top_windows.SetSize(top_windows_size)
+            top_windows.SetMinSize(top_windows_size)
+        else:
+            top_windows_size = (480, 350)
+            top_windows.SetSize(top_windows_size)
+            top_windows.SetMinSize(top_windows_size)
+        top_windows.Show(True)
+        self.Show(False)
+        ga.increase_counter(category="程序操作", name="打开悬浮窗", title=title_id(),
+                            other_parameter={})
 
     # 等级检查事件
     def lvl_check(self, event):
@@ -463,16 +490,16 @@ class MainWindow(wx.Frame):
         try:  # 优先读取本地代码，测试用
             with open(r'./msg.json', encoding="utf-8") as f:
                 online_msg_json = json.load(f)
-        except FileNotFoundError:  # 请求在线热公告
+        except BaseException:  # 请求在线热公告
             try:
                 try:
                     url = 'https://ghproxy.com/https://raw.githubusercontent.com/subjadeites/ffxiv-gatherer-clock/master/msg.json'
                     response = requests.get(url, timeout=10, headers={'User-Agent': user_agent})
-                    online_msg_json = eval(response.text)
+                    online_msg_json = response.json()
                 except BaseException:
                     url = 'https://ffxivclock.gamedatan.com/msg'
                     response = requests.get(url, timeout=10, headers={'User-Agent': user_agent})
-                    online_msg_json = eval(response.text)
+                    online_msg_json = response.json()
             except BaseException:
                 pass
         title = online_msg_json.get('title')

@@ -7,12 +7,13 @@ import datetime
 import json
 import os
 import time
+import webbrowser
 
 import pandas as pd
 import win32com.client
 import wx
 
-from lib.update import check_update,user_agent
+from lib.update import check_update, user_agent
 from utils.google_analytics import Google_Analytics
 
 # 图标设定
@@ -21,6 +22,7 @@ main_icon = wx.Icon('./resource/Clock.ico', wx.BITMAP_TYPE_ICO)
 main_size = (1330, 768)
 more_choose_size = (550, 600)
 config_size = (365, 300)
+top_windows_size = (480,350)
 
 Eorzea_time_start = "{:02d}：{:02d}".format(
     int(datetime.datetime.utcfromtimestamp((time.time() * 1440 / 70) % 86400).strftime("%H")),
@@ -38,7 +40,8 @@ try:
         if config_json.get('is_can_DLC_6') is True:
             default_client = False
         else:
-            default_client = config_json.get('default_client') if config_json.get('default_client') is not None else True
+            default_client = config_json.get('default_client') if config_json.get(
+                'default_client') is not None else True
         is_GA = config_json.get('is_GA') if config_json.get('is_GA') is not None else True
         config_cant_read = False
         # 实例化谷歌分析
@@ -51,29 +54,26 @@ except FileNotFoundError:
     is_GA = True
     config_cant_read = True
     is_auto_update = True
-    is_test = False # 加入test功能，目前用于强开国服6.0
+    is_test = False  # 加入test功能，目前用于强开国服6.0
+    # 实例化谷歌分析
+    ga = Google_Analytics()
+except json.decoder.JSONDecodeError:
+    check_update.set_is_auto_update(False)
+    default_client = True
+    is_GA = True
+    config_cant_read = True
+    is_auto_update = True
+    is_test = False  # 加入test功能，目前用于强开国服6.0
     # 实例化谷歌分析
     ga = Google_Analytics()
 
 
-# 新的tts方法，解决卡进程问题
-# 引入了can_not_break参数以解决『下个时段预报』TTS会打断主TTS的BUG，如果可以打断主TTS则不填（默认False），不能打断则引入True）
-# 感谢Natar Laurent@Chocobo
-def tts(msg, can_not_break: bool = False):
-    if spk.Status.runningState == 2 and can_not_break is False:
-        spk.Speak("", 2)
-        spk.Speak(msg, 1)
-    elif spk.Status.runningState == 2 and can_not_break is False:
-        while spk.Status.runningState == 1:
-            spk.Speak("", 2)
-            spk.Speak(msg, 1)
-            break
-    else:
-        spk.Speak(msg, 1)
-
-
 # 组合筛选条件
-def func_select(func) -> str:
+def func_select(func: list) -> str:
+    """
+    :param func: 简单筛选中选中的
+    :return:
+    """
     if func == [0]:
         return ""
     else:
@@ -87,16 +87,46 @@ def func_select(func) -> str:
 
 # 用于计算ET小时的方法
 def Eorzea_time() -> int:
+    """
+    :return: Eorzea hour(int)
+    """
     temp_time = datetime.datetime.utcfromtimestamp((time.time() * 1440 / 70) % 86400)
     Eorzea_hour = int(temp_time.strftime("%H"))
     # Eorzea_min = int(temp_time.strftime("%M"))
     return Eorzea_hour
 
 
-# 导入系统tts
-spk = win32com.client.Dispatch("SAPI.SpVoice")
-spk_jp = win32com.client.Dispatch("SAPI.SpVoice")
-tts('')
+# 新的tts方法，解决卡进程问题
+# 引入了can_not_break参数以解决『下个时段预报』TTS会打断主TTS的BUG，如果可以打断主TTS则不填（默认False），不能打断则引入True）
+# 感谢Natar Laurent@Chocobo
+def tts(msg, can_not_break: bool = False):
+    """
+    :param msg: TTS播报内容
+    :param can_not_break: 是否可以被打断，默认False=能被打断
+    """
+    if spk.Status.runningState == 2 and can_not_break is False:
+        spk.Speak("", 2)
+        spk.Speak(msg, 1)
+    elif spk.Status.runningState == 2 and can_not_break is False:
+        while spk.Status.runningState == 1:
+            spk.Speak("", 2)
+            spk.Speak(msg, 1)
+            break
+    else:
+        spk.Speak(msg, 1)
+
+
+try:
+    # 导入系统tts
+    spk = win32com.client.Dispatch("SAPI.SpVoice")
+    tts('')
+except:
+    md = wx.MessageDialog(None, """系统TTS不存在，无法导入。点击确定查看文档解决。""", "导入系统TTS失败！")  # 语法是(self, 内容, 标题, ID)
+    md.ShowModal()
+    webbrowser.open("https://bbs.nga.cn/read.php?tid=29755989&page=6#pid598201942")
+    md.Destroy()
+    exit()
+
 # 导入采集时钟
 try:
     clock = pd.read_csv("./resource/list.csv", encoding='UTF-8-sig')
