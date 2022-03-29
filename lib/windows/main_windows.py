@@ -18,7 +18,7 @@ import wx.html2
 
 from lib.clock import Clock_Thread, clock_thread
 from lib.public import main_size, main_icon, ga, clock, Eorzea_time_start, tts, more_choose_size, config_cant_read, \
-    config_size, user_agent, is_test
+    config_size, user_agent
 from lib.update import version, check_update, Check_Update, update_info
 from utils.google_analytics import title_id
 
@@ -37,7 +37,7 @@ class MainWindow(wx.Frame):
         self.choose_lang_result = "JP"
         # 设置图标
         self.SetIcon(main_icon)
-        # 设置菜单
+        # 基础菜单
         file_menu = wx.Menu()
         # wx.ID_ABOUT和wx.ID_EXIT是wxWidgets提供的标准ID
         change_config = file_menu.Append(-1, "设置", "修改设置")
@@ -45,16 +45,22 @@ class MainWindow(wx.Frame):
         file_menu.AppendSeparator()
         item_exit = file_menu.Append(wx.ID_EXIT, "退出", "终止应用程序")
         self.Bind(wx.EVT_MENU, self.OnExit, item_exit)
+        # 帮助菜单
         update_menu = wx.Menu()
         self.item_check_update = update_menu.Append(-1, "检查更新", "点击检查更新")
         self.Bind(wx.EVT_MENU, self.on_check_update, self.item_check_update)
         update_menu.AppendSeparator()
         item_about = update_menu.Append(wx.ID_ABOUT, "关于", "关于程序的信息")
         self.Bind(wx.EVT_MENU, self.OnAbout, item_about)
+        # 校准时间菜单设置
+        auto_ntp = wx.Menu()
+        self.item_Ntp = auto_ntp.Append(-1, "ET不准？校准时钟", "点击校准时钟")
+        self.Bind(wx.EVT_MENU, self.OnClick_Ntp, self.item_Ntp)
         # 创建菜单栏
         menubar = wx.MenuBar()
         menubar.Append(file_menu, "文件")
         menubar.Append(update_menu, '帮助')
+        menubar.Append(auto_ntp, 'ET不准点我')
         self.SetMenuBar(menubar)
         # 设置ET时钟
         self.Eorzea_clock_out_text = wx.StaticText(self.main_frame, size=(110, 20), pos=(main_size[0] - 160, 1),
@@ -173,6 +179,10 @@ class MainWindow(wx.Frame):
         self.Centre()
         self.Bind(wx.EVT_CLOSE, self.OnExit)
         self.Show(True)
+
+        # 管理员权限自动校准时钟
+        self.admin_auto_Ntp(self)
+
         try:
             ga.increase_counter(category="程序操作", name="启动程序", title=title_id(),
                                 other_parameter={})
@@ -290,15 +300,26 @@ class MainWindow(wx.Frame):
         if self.choose_lang_result != "CN":
             top_windows_size = (570, 350)
             top_windows.SetSize(top_windows_size)
-            top_windows.SetMinSize(top_windows_size)
         else:
             top_windows_size = (480, 350)
             top_windows.SetSize(top_windows_size)
-            top_windows.SetMinSize(top_windows_size)
         top_windows.Show(True)
         self.Show(False)
         ga.increase_counter(category="程序操作", name="打开悬浮窗", title=title_id(),
                             other_parameter={})
+
+    # 校准系统时间
+    def OnClick_Ntp(self, event):
+        ntp_info = wx.MessageDialog(None,
+                                    "ET时钟不准是因为电脑本地时间不准，非程序BUG\n\n校准时钟需要管理员权限,如介意请自行百度如何校准电脑时钟，手动校准。\n\n自动校准请点是，并在弹出的UAC框中给予管理员权限重启本程序后，会自动校准。\n介意请点否，并自行百度校准时钟。",
+                                    "校准时钟需要管理员权限", wx.YES_NO | wx.ICON_QUESTION)
+        if ntp_info.ShowModal() == wx.ID_YES:
+            from utils.ntp import Ntp_Client
+            ntp_client = Ntp_Client()  # 实例化校时间线程
+            ntp_client.start()  # 启动主程序之前校准本地时钟
+        else:
+            webbrowser.open("http://buhuibaidu.me/?s=win10校准系统时间")
+        ntp_info.Destroy()
 
     # 等级检查事件
     def lvl_check(self, event):
@@ -540,3 +561,13 @@ class MainWindow(wx.Frame):
                     pass
             else:
                 pass
+
+    @staticmethod
+    def admin_auto_Ntp(self):
+        from utils.ntp import is_admin, Ntp_Client
+        if is_admin():
+            ntp_client = Ntp_Client()  # 实例化校时间线程
+            ntp_client.start()  # 启动主程序之前校准本地时间
+            dlg = wx.MessageDialog(self, '已校准系统时间！', '提示', wx.OK)
+            dlg.ShowModal()
+            dlg.Destroy()

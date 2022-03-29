@@ -10,8 +10,9 @@ from threading import Thread
 import requests
 import wx
 
-version = "1.4.0"
-user_agent ="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.102 Safari/537.36"
+version = "1.4.1"
+user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.102 Safari/537.36"
+
 
 # 更新弹窗
 def update_info(version_online, version_online_describe: str = "未写入新版本介绍"):

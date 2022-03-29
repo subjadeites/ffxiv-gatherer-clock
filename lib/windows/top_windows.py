@@ -12,7 +12,7 @@ from lib.public import top_windows_size, main_icon, clock
 class Top_Windows(wx.Frame):
     def __init__(self, parent, title="悬浮窗"):
         super().__init__(parent=parent, title=title, size=top_windows_size,
-                         style=wx.CAPTION | wx.FRAME_FLOAT_ON_PARENT)  # 继承wx.Frame类
+                         style= wx.RESIZE_BORDER |wx.CAPTION | wx.FRAME_FLOAT_ON_PARENT)  # 继承wx.Frame类
         self.ToggleWindowStyle(wx.STAY_ON_TOP)
         self.main_frame = wx.Panel(self)
         self.SetIcon(main_icon)
@@ -26,8 +26,8 @@ class Top_Windows(wx.Frame):
                                       pos=(top_windows_size[0] - 100, top_windows_size[1] - 80))
         self.close_button.Bind(wx.EVT_BUTTON, self.OnClose)
 
-        self.Bind(wx.EVT_CLOSE, self.OnClose)
-
+        self.Bind(wx.EVT_SIZE,self.change_size) # 绑定窗口大小改变事件
+        self.Bind(wx.EVT_CLOSE, self.OnClose)  # 绑定关闭事件
         self.Centre()
 
     def trans_clock_result(self, now_list: list, next_list: list, top_windows_size:tuple):
@@ -40,6 +40,10 @@ class Top_Windows(wx.Frame):
         now_text = AsciiTable(now_list).table
         self.now_text.SetLabel(now_text)
         self.close_button.SetPosition((top_windows_size[0] - 100, top_windows_size[1] - 80))
+
+    def change_size(self, event):
+        self.close_button.SetPosition((self.GetSize()[0] - 100, self.GetSize()[1] - 80))
+        event.Skip()
 
     def OnClose(self, event):
         from lib.windows import frame
