@@ -124,6 +124,7 @@ class Google_Analytics:
     def increase_counter(self, category="", name: str = "", post_type: str = "event", title: str = "",
                          other_parameter: dict = None):
         """
+        ga类核心函数
         :param category: 事件类别
         :param name: 事件动作
         :param post_type: 事件类型（event-事件;page_view-网页）

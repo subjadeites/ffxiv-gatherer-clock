@@ -8,14 +8,19 @@ from threading import Thread
 
 import pandas as pd
 
-from lib.public import choose_DLC_dict, choose_ZhiYe_dict, clock, func_select, tts, spk, Eorzea_time, ga
+from lib.public import choose_DLC_dict, choose_ZhiYe_dict, clock, func_select, tts, spk, Eorzea_time, ga, LingSha_list,choose_dict
 from utils.google_analytics import title_id
 
+# 临时初始化使用，避免自动格式化删除
+# TODO：闹钟方法优化
+LingSha_list = LingSha_list
+choose_dict = choose_dict
 
 # 闹钟核心方法
 # noinspection PyUnusedLocal
 def clock_out(lang, Eorzea_time_in, need_tts, func, ZhiYe, lvl_min, lvl_max, choose_DLC, client_verion,
               more_select_result, next_clock_time) -> int:
+
     from lib.windows import frame
     # 换日,兼容2.0里3个ET小时刷新的时限
     if choose_DLC in ["漆黑", "晓月", "红莲", "苍天"]:
