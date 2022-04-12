@@ -24,6 +24,9 @@ more_choose_size = (550, 600)
 config_size = (365, 300)
 top_windows_size = (480,350)
 
+# 版本差异设定
+cn_not_have_version = 6.1
+
 Eorzea_time_start = "{:02d}：{:02d}".format(
     int(datetime.datetime.utcfromtimestamp((time.time() * 1440 / 70) % 86400).strftime("%H")),
     int(datetime.datetime.utcfromtimestamp((time.time() * 1440 / 70) % 86400).strftime("%M")))

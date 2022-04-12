@@ -8,7 +8,7 @@ from threading import Thread
 
 import pandas as pd
 
-from lib.public import choose_DLC_dict, choose_ZhiYe_dict, clock, func_select, tts, spk, Eorzea_time, ga, LingSha_list,choose_dict
+from lib.public import choose_DLC_dict, choose_ZhiYe_dict, clock, func_select, tts, spk, Eorzea_time, ga, LingSha_list,choose_dict,cn_not_have_version
 from utils.google_analytics import title_id
 
 # 临时初始化使用，避免自动格式化删除
@@ -33,10 +33,13 @@ def clock_out(lang, Eorzea_time_in, need_tts, func, ZhiYe, lvl_min, lvl_max, cho
             next_start_time = 0
         else:
             next_start_time = Eorzea_time_in + 1
-
+    if client_verion =="国服":
+        exclude_version = cn_not_have_version
+    else:
+        exclude_version = None
     # 筛选用字段准备
-    time_select = "(clock['开始ET'] <= Eorzea_time_in) & (clock['结束ET'] > Eorzea_time_in)"
-    time_select_next = "(clock['开始ET'] <= next_start_time) & (clock['结束ET'] > next_start_time)"
+    time_select = "(clock['开始ET'] <= Eorzea_time_in) & (clock['结束ET'] > Eorzea_time_in) & (clock['patch'] != exclude_version)"
+    time_select_next = "(clock['开始ET'] <= next_start_time) & (clock['结束ET'] > next_start_time) & (clock['patch'] != exclude_version)"
     lvl_select = "& (clock['等级'] <= " + str(lvl_max) + ")" + "& (clock['等级'] >= " + str(lvl_min) + ")"
     DLC_select = choose_DLC_dict.get(choose_DLC)
     ZhiYe_select = choose_ZhiYe_dict.get(ZhiYe)
@@ -134,7 +137,7 @@ def clock_out(lang, Eorzea_time_in, need_tts, func, ZhiYe, lvl_min, lvl_max, cho
                 i += 1
 
         # tts模块
-        if need_tts is True:
+        if need_tts == 0:
             tts_word = ""
             for i in range(0, len(out_list)):
                 if out_list[i][0] in old_out_list and next_clock_time != -1:
@@ -163,7 +166,7 @@ def clock_out(lang, Eorzea_time_in, need_tts, func, ZhiYe, lvl_min, lvl_max, cho
                     should_tss = True
                 elif not old_out_list:  # 用于首次启动闹钟时触发tts
                     should_tss = True
-            if should_tss is True:
+            if should_tss is True and need_tts == 2:
                 spk.Speak("时限已刷新！")
 
         # 将输入同步进悬浮窗模块
@@ -263,7 +266,7 @@ class Clock_Thread(Thread):
                                                 self.more_select_result, next_clock_time)
                 time.sleep(1)
 
-    def set_values(self, lang: str, need_tts: bool, func: list, ZhiYe: int, lvl_min: int,
+    def set_values(self, lang: str, need_tts: int, func: list, ZhiYe: int, lvl_min: int,
                    lvl_max: int, choose_DLC: str, client_version: str, more_select_result: list):
         self.lang = lang
         self.need_tts = need_tts

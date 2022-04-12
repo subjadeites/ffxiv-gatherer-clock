@@ -90,7 +90,7 @@ class MainWindow(wx.Frame):
         self.choose_lang = wx.RadioBox(self.main_frame, -1, "选择语言", (170, self.line_pos[0]), wx.DefaultSize,
                                        ['日语JP', '英语EN'], 2, wx.RA_SPECIFY_COLS)
         self.choose_TTS = wx.RadioBox(self.main_frame, -1, "是否开启TTS", (300, self.line_pos[2]), wx.DefaultSize,
-                                      ['是', '否'], 2, wx.RA_SPECIFY_COLS)
+                                      ['全部开启','全部静音','仅刷新'], 3, wx.RA_SPECIFY_COLS)
         self.choose_ZhiYe = wx.RadioBox(self.main_frame, -1, "选择职业", (10, self.line_pos[1]), wx.DefaultSize,
                                         ['全部', '采掘', '园艺'], 3, wx.RA_SPECIFY_COLS)
         self.choose_select_way = wx.RadioBox(self.main_frame, -1, "选择筛选类型", (170, self.line_pos[1]), wx.DefaultSize,
@@ -236,7 +236,7 @@ class MainWindow(wx.Frame):
                 self.choose_lang_result = 'CN'
             else:
                 self.choose_lang_result = 'JP'
-            choose_TTS_result = [True, False][self.choose_TTS.GetSelection()]  # 确定TTS开关
+            choose_TTS_result = self.choose_TTS.GetSelection()  # 确定TTS开关
             choose_ZhiYe_result = self.choose_ZhiYe.GetSelection()
             choose_func_result = {}  # 需要对应处理多选框
             if self.choose_select_way.GetSelection() == 0:
@@ -286,11 +286,13 @@ class MainWindow(wx.Frame):
     # 停止闹钟按钮事件
     # TODO:在开启闹钟的时候需要停用所有和筛选设置有关的功能，关闭闹钟的时候重新启用
     def OnClick_stop(self, event):
-        event.GetEventObject().Disable()
         clock_thread.stop()
         tts('')
         self.button_more_select.Enable()
         self.button_top_windows.Show(False)  # 关闭闹钟后关闭悬浮窗按钮
+        event.GetEventObject().Disable()
+        self.out_listctrl.DeleteAllItems()
+        self.out_listctrl_next.DeleteAllItems()
 
     # 启用悬浮窗按钮事件
     def OnClick_top_windows(self, event):

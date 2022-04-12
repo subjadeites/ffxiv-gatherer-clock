@@ -180,6 +180,21 @@ class More_Choose_Windows(wx.Frame):
                     md = wx.MessageDialog(None, """暂不支持跨语言导入存档。\n请等待后续版本开发，在做了在做了！""", "导入失败")  # 语法是(self, 内容, 标题, ID)
                     md.ShowModal()
                     md.Destroy()
+                else:
+                    self.choose_DLC_1.SetValue(False)
+                    self.choose_DLC_2.SetValue(False)
+                    self.choose_DLC_3.SetValue(False)
+                    self.choose_DLC_4.SetValue(False)
+                    self.choose_DLC_5.SetValue(False)
+                    self.choose_DLC_1.Enable()
+                    self.choose_DLC_2.Enable()
+                    self.choose_DLC_3.Enable()
+                    self.choose_DLC_4.Enable()
+                    self.choose_DLC_5.Enable()
+                    self.choose_way_2.SetValue(True)
+                    if self.lang == 'CN':
+                        self.choose_DLC_1.SetValue(False)
+                        self.choose_DLC_1.Disable()
             except FileNotFoundError:
                 md = wx.MessageDialog(None, """未找到自定义筛选模板文件。\n请重新创建模板。""", "导入失败")  # 语法是(self, 内容, 标题, ID)
                 md.ShowModal()
@@ -188,21 +203,6 @@ class More_Choose_Windows(wx.Frame):
                 md = wx.MessageDialog(None, """自定义模板文件损坏。\n请重新创建模板。""", "导入失败")  # 语法是(self, 内容, 标题, ID)
                 md.ShowModal()
                 md.Destroy()
-            else:
-                self.choose_DLC_1.SetValue(False)
-                self.choose_DLC_2.SetValue(False)
-                self.choose_DLC_3.SetValue(False)
-                self.choose_DLC_4.SetValue(False)
-                self.choose_DLC_5.SetValue(False)
-                self.choose_DLC_1.Enable()
-                self.choose_DLC_2.Enable()
-                self.choose_DLC_3.Enable()
-                self.choose_DLC_4.Enable()
-                self.choose_DLC_5.Enable()
-                self.choose_way_2.SetValue(True)
-                if self.lang == 'CN':
-                    self.choose_DLC_1.SetValue(False)
-                    self.choose_DLC_1.Disable()
         else:
             pass
 
@@ -217,7 +217,7 @@ class More_Choose_Windows(wx.Frame):
                         for i in range(0, len(have_selected)):
                             have_selected_list.append(have_selected[i])
                     write_dict = {"sort": 1, "lang": self.lang, "detail": have_selected_list}
-                    json.dump(write_dict, f)
+                    json.dump(write_dict, f, ensure_ascii=False)
                     md = wx.MessageDialog(None, """保存成功！""", "导出成功")  # 语法是(self, 内容, 标题, ID)
                     md.ShowModal()
                     md.Destroy()
