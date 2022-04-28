@@ -10,6 +10,7 @@ import pandas as pd
 
 from lib.public import choose_DLC_dict, choose_ZhiYe_dict, clock, func_select, tts, spk, Eorzea_time, ga, LingSha_list,choose_dict,cn_not_have_version
 from utils.google_analytics import title_id
+from utils.play_audio import PlayWav
 
 # 临时初始化使用，避免自动格式化删除
 # TODO：闹钟方法优化
@@ -168,6 +169,8 @@ def clock_out(lang, Eorzea_time_in, need_tts, func, ZhiYe, lvl_min, lvl_max, cho
                     should_tss = True
             if should_tss is True and need_tts == 2:
                 spk.Speak("时限已刷新！")
+            elif should_tss is True and need_tts == 3:
+                PlayWav(frame.selected_sound).start()
 
         # 将输入同步进悬浮窗模块
         trans_top_windows_data(out_list, out_list_next, lang)

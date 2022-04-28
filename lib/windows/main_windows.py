@@ -21,6 +21,7 @@ from lib.public import main_size, main_icon, ga, clock, Eorzea_time_start, tts, 
     config_size, user_agent
 from lib.update import version, check_update, Check_Update, update_info
 from utils.google_analytics import title_id
+from utils.play_audio import PlayWav
 
 
 # noinspection PyUnusedLocal
@@ -89,8 +90,15 @@ class MainWindow(wx.Frame):
         self.Bind(wx.EVT_RADIOBOX, self.event_choose_client, self.choose_client)
         self.choose_lang = wx.RadioBox(self.main_frame, -1, "选择语言", (170, self.line_pos[0]), wx.DefaultSize,
                                        ['日语JP', '英语EN'], 2, wx.RA_SPECIFY_COLS)
-        self.choose_TTS = wx.RadioBox(self.main_frame, -1, "是否开启TTS", (300, self.line_pos[2]), wx.DefaultSize,
-                                      ['全部开启','全部静音','仅刷新'], 3, wx.RA_SPECIFY_COLS)
+        self.choose_TTS = wx.RadioBox(self.main_frame, -1, "播报选项", (300, self.line_pos[2]), wx.DefaultSize,
+                                      ['TTS播报', "全部静音", 'TTS刷新', '使用音效'], 4, wx.RA_SPECIFY_COLS)
+        self.choose_TTS.Bind(wx.EVT_RADIOBOX, self.event_choose_sound)
+        self.choose_sound_text = wx.StaticText(self.main_frame, label='音效选择：(选中试听)', pos=(600, self.line_pos[2]))
+        self.choose_sound_text.Show(False)
+        self.choose_sound = wx.ComboBox(self.main_frame, value='choose_sound', pos=(600, self.line_pos[2] + 25),
+                                        choices=[], style=16, size=(160, 25))
+        self.choose_sound.Show(False)
+        self.choose_sound.Bind(wx.EVT_COMBOBOX, self.event_select_sound)
         self.choose_ZhiYe = wx.RadioBox(self.main_frame, -1, "选择职业", (10, self.line_pos[1]), wx.DefaultSize,
                                         ['全部', '采掘', '园艺'], 3, wx.RA_SPECIFY_COLS)
         self.choose_select_way = wx.RadioBox(self.main_frame, -1, "选择筛选类型", (170, self.line_pos[1]), wx.DefaultSize,
@@ -211,6 +219,7 @@ class MainWindow(wx.Frame):
         try:
             clock_thread.stop()
             tts('')
+            PlayWav(None).start()
         except Exception:
             pass
         self.Destroy()  # 关闭整个frame
@@ -288,6 +297,7 @@ class MainWindow(wx.Frame):
     def OnClick_stop(self, event):
         clock_thread.stop()
         tts('')
+        PlayWav(None).start()
         self.button_more_select.Enable()
         self.button_top_windows.Show(False)  # 关闭闹钟后关闭悬浮窗按钮
         event.GetEventObject().Disable()
@@ -297,14 +307,18 @@ class MainWindow(wx.Frame):
     # 启用悬浮窗按钮事件
     def OnClick_top_windows(self, event):
         from lib.windows import top_windows
-        from lib.config import top_windows_pos
+        from lib.config import top_windows_pos, top_windows_transparent
         top_windows.Move(top_windows_pos())
         if self.choose_lang_result != "CN":
             top_windows_size = (570, 350)
             top_windows.SetSize(top_windows_size)
+            top_windows.SetTransparent(top_windows_transparent())  # 设置透明度
+            top_windows.transparent = top_windows_transparent()  # 设置透明度变量
         else:
             top_windows_size = (480, 350)
             top_windows.SetSize(top_windows_size)
+            top_windows.SetTransparent(top_windows_transparent())  # 设置透明度
+            top_windows.transparent = top_windows_transparent()  # 设置透明度变量
         top_windows.Show(True)
         self.Show(False)
         ga.increase_counter(category="程序操作", name="打开悬浮窗", title=title_id(),
@@ -329,6 +343,7 @@ class MainWindow(wx.Frame):
             self.lvl_min.SetValue(self.lvl_max.GetValue())
             wx.MessageDialog(self, "等级下限不应当高于等级上限！", "等级设置错误").ShowModal()
 
+    # 点击当前时间段详情框事件
     def click_line_in_list(self, event):
         click_name = event.GetEventObject().GetItemText(event.GetEventObject().GetFirstSelected())
         select_next = (((clock['材料名JP'] == click_name) | (clock['材料名EN'] == click_name) | (
@@ -345,6 +360,7 @@ class MainWindow(wx.Frame):
             self.img_ctrl.SetBitmap(wx.Bitmap(img))
         self.out_listctrl_next.SetItemState(self.out_listctrl_next.GetFirstSelected(), 0, wx.LIST_STATE_SELECTED)
 
+    # 点击下个时间段详情框事件
     def click_line_in_list_next(self, event):
         click_name = event.GetEventObject().GetItemText(event.GetEventObject().GetFirstSelected())
         if self.Eorzea_hour == 22 or self.Eorzea_hour == 23:
@@ -373,6 +389,45 @@ class MainWindow(wx.Frame):
         else:
             self.choose_lang.SetItemLabel(0, "中文CN")
             self.choose_lang.SetItemLabel(1, "中文CN")
+
+    # 使用音效相关选项读取
+    def event_choose_sound(self, event):
+        if self.choose_TTS.GetSelection() == 3:
+            fileList = os.listdir(r'./resource/sound/')
+            for i in fileList:
+                if i.endswith('.wav'):  # 只支持wav格式
+                    pass
+                else:
+                    fileList.remove(i)
+            self.choose_sound.SetItems(fileList)
+            with open(r'./conf/config.json', 'r') as f:
+                self.selected_sound = json.load(f).get('selected_sound')
+                if self.selected_sound is None:
+                    pass
+                else:
+                    selected_sound_flie_name = self.selected_sound[17:]
+                    if selected_sound_flie_name in fileList:
+                        self.choose_sound.SetSelection(fileList.index(selected_sound_flie_name))
+                    else:
+                        wx.MessageDialog(None,
+                                         "配置文件中的音效文件不存在，请重新选择音效！",
+                                         "文件不存在", wx.YES_DEFAULT | wx.ICON_WARNING).ShowModal()
+            self.choose_sound.Show(True)
+            self.choose_sound_text.Show(True)
+        else:
+            self.choose_sound.Show(False)
+            self.choose_sound_text.Show(False)
+
+    # 使用音效下拉框绑定事件
+    def event_select_sound(self, event):
+        file_name = r'./resource/sound/' + self.choose_sound.GetStringSelection()
+        PlayWav(file_name).start()
+        self.selected_sound = file_name
+        with open(r'./conf/config.json', 'r') as f:
+            config_json = json.load(f)
+        with open(r'./conf/config.json', 'w') as f:
+            config_json['selected_sound'] = self.selected_sound
+            json.dump(config_json, f)
 
     # 自定义筛选时禁用简单筛选框，并弹出自定义筛选框
     def event_choose_select_way(self, event):
@@ -438,6 +493,7 @@ class MainWindow(wx.Frame):
             temp_select_result_list.append(i)
         self.more_select_result_list = temp_select_result_list
 
+    # 更新相关事件
     @staticmethod
     def on_check_update(event):
         if check_update.have_update is True:
@@ -455,6 +511,7 @@ class MainWindow(wx.Frame):
             except BaseException:
                 pass
 
+    # 选择不同版本自动调整等级事件
     def DLC_to_lvl(self, event):
         if self.choose_DLC.GetSelection() == 0:
             self.lvl_min.SetValue(80)
@@ -466,6 +523,7 @@ class MainWindow(wx.Frame):
             self.lvl_min.SetValue(80 - 10 * (self.choose_DLC.GetSelection() - 1))
             self.lvl_max.SetValue(90 - 10 * (self.choose_DLC.GetSelection() - 1))
 
+    # 根据简单筛选类型自动调整等级事件
     def choose_func_auto_write(self, event):
         if self.choose_func_6.IsChecked() is True:
             self.lvl_min.SetValue(0)
@@ -480,6 +538,7 @@ class MainWindow(wx.Frame):
             self.lvl_max.SetValue(90)
             self.choose_DLC.SetSelection(0)
 
+    # 未读取到配置文件时，跳转配置窗口事件
     def new_config(self, *args):
         from lib.windows import Config_Windows
         if config_cant_read is True or len(args) == 1:
@@ -489,6 +548,7 @@ class MainWindow(wx.Frame):
             config_windows.Show(True)
             self.Show(False)
 
+    # 传递配置数据
     def transfer_config(self, _default_client, _is_auto_update, _is_GA):
         self.default_client = _default_client
         self.is_auto_update = _is_auto_update
@@ -498,6 +558,7 @@ class MainWindow(wx.Frame):
             self.choose_lang.SetItemLabel(0, "中文CN")
             self.choose_lang.SetItemLabel(1, "中文CN")
 
+    # 更多筛选窗口退出时，更新主窗口的UI
     def transfer_button_more_select_shown(self, shown):
         if shown is True:
             self.button_more_select.Enable()
@@ -556,7 +617,7 @@ class MainWindow(wx.Frame):
                 try:
                     if os.path.exists(r'./conf/online_msg_read') is True:
                         win32api.SetFileAttributes(r'./conf/online_msg_read', win32con.FILE_ATTRIBUTE_NORMAL)
-                    with open(r'./conf/online_msg_read', "r+w", encoding="UTF-8") as f:
+                    with open(r'./conf/online_msg_read', "w+", encoding="UTF-8") as f:
                         f.write(online_msg_json_md5)
                     win32api.SetFileAttributes(r'./conf/online_msg_read', win32con.FILE_ATTRIBUTE_HIDDEN)
                 except BaseException:
@@ -564,6 +625,7 @@ class MainWindow(wx.Frame):
             else:
                 pass
 
+    # 校准本地时间
     @staticmethod
     def admin_auto_Ntp(self):
         from utils.ntp import is_admin, Ntp_Client
