@@ -114,12 +114,16 @@ class MainWindow(wx.Frame):
         # 设置时限点筛选多选框
         self.choose_func_text = wx.StaticText(self.main_frame, label='请选择需要提醒的采集点种类：', pos=(10, self.line_pos[3]))
         self.choose_func_1 = wx.CheckBox(self.main_frame, 91, "白票收藏品", pos=(180, self.line_pos[3]))
-        self.choose_func_2 = wx.CheckBox(self.main_frame, 92, "紫票收藏品", pos=(270, self.line_pos[3]))
-        self.choose_func_3 = wx.CheckBox(self.main_frame, 93, "精选灵砂", pos=(360, self.line_pos[3]))
-        self.choose_func_4 = wx.CheckBox(self.main_frame, 94, "传说点", pos=(440, self.line_pos[3]))
-        self.choose_func_5 = wx.CheckBox(self.main_frame, 95, "传说：精制魔晶石", pos=(500, self.line_pos[3]))
-        self.choose_func_6 = wx.CheckBox(self.main_frame, 96, "水晶", pos=(620, self.line_pos[3]))
-        self.choose_func_7 = wx.CheckBox(self.main_frame, 97, "晶簇", pos=(670, self.line_pos[3]))
+        self.choose_func_2 = wx.CheckBox(self.main_frame, 92, "紫票收藏品", pos=(265, self.line_pos[3]))
+        self.choose_func_3 = wx.CheckBox(self.main_frame, 93, "精选灵砂", pos=(350, self.line_pos[3]))
+        self.choose_func_4 = wx.CheckBox(self.main_frame, 94, "传说点", pos=(422, self.line_pos[3]))
+        self.choose_func_8 = wx.CheckBox(self.main_frame, 98 , '高难精选', pos=(482, self.line_pos[3]))
+        self.choose_func_5 = wx.CheckBox(self.main_frame, 95, "传说：精制魔晶石", pos=(555, self.line_pos[3]))
+        self.choose_func_6 = wx.CheckBox(self.main_frame, 96, "水晶", pos=(675, self.line_pos[3]))
+        self.choose_func_7 = wx.CheckBox(self.main_frame, 97, "晶簇", pos=(725, self.line_pos[3]))
+        self.choose_func_0 = wx.CheckBox(self.main_frame, 90, "[6.2]610HQ材料", pos=(225, self.line_pos[4]))
+        self.now_patch_font = wx.Font(9,74,90,700,False,'Microsoft YaHei UI',28)
+        self.choose_func_0.SetFont(self.now_patch_font)
         self.Bind(wx.EVT_CHECKBOX, self.choose_func_auto_write, self.choose_func_5)
         self.Bind(wx.EVT_CHECKBOX, self.choose_func_auto_write, self.choose_func_6)
         self.Bind(wx.EVT_CHECKBOX, self.choose_func_auto_write, self.choose_func_7)
@@ -203,6 +207,8 @@ class MainWindow(wx.Frame):
         except Exception:
             configs.ga.increase_counter(category="程序操作", name="启动程序", title=title_id(),
                                         other_parameter={})
+        # 设置强调字体颜色
+        self.choose_func_0.SetForegroundColour((255, 0, 0, 255))
 
     # 关于
     def OnAbout(self, event):
@@ -258,6 +264,8 @@ class MainWindow(wx.Frame):
                 choose_func_result[5] = self.choose_func_5.IsChecked()  # 检测传说精制是否勾选
                 choose_func_result[6] = self.choose_func_6.IsChecked()  # 检测水晶是否勾选
                 choose_func_result[7] = self.choose_func_7.IsChecked()  # 检测晶簇是否勾选
+                choose_func_result[8] = self.choose_func_8.IsChecked()  # 检测高难精炼是否勾选
+                choose_func_result[0] = self.choose_func_0.IsChecked()  # 检测当前patch是否勾选
                 choose_DLC_result = ['晓月', '全部', '漆黑', '红莲', '苍天', '新生'][
                     self.choose_DLC.GetSelection()]  # 简单筛选DLC版本
             else:
@@ -278,7 +286,7 @@ class MainWindow(wx.Frame):
                 if v is True:
                     choose_func_list.append(k)
             if not choose_func_list:
-                choose_func_list = [0]
+                choose_func_list = [-1]
 
             # 传入参数到闹钟线程
             globals()['clock_thread'] = Clock_Thread()
@@ -453,6 +461,7 @@ class MainWindow(wx.Frame):
             self.choose_func_5.Enable()
             self.choose_func_6.Enable()
             self.choose_func_7.Enable()
+            self.choose_func_8.Enable()
             self.lvl_min.Enable()
             self.lvl_max.Enable()
             self.lvl_text.Enable()
@@ -472,6 +481,7 @@ class MainWindow(wx.Frame):
             self.choose_func_5.Disable()
             self.choose_func_6.Disable()
             self.choose_func_7.Disable()
+            self.choose_func_8.Disable()
             self.lvl_min.Disable()
             self.lvl_max.Disable()
             self.lvl_text.Disable()

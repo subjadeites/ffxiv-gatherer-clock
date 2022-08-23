@@ -20,7 +20,8 @@ config_size = (365, 500)
 top_windows_size = (480, 350)
 
 # 版本差异设定
-cn_not_have_version = 6.3
+cn_not_have_version = 6.2
+now_patch_Legendary_star = 2
 
 Eorzea_time_start = "{:02d}：{:02d}".format(
     int(datetime.datetime.utcfromtimestamp((time.time() * 1440 / 70) % 86400).strftime("%H")),
@@ -36,7 +37,7 @@ def func_select(func: list) -> str:
     Returns:
         组合后的筛选条件
     """
-    if func == [0]:
+    if func == [-1]:
         return ""
     else:
         result = "& ("
@@ -71,7 +72,8 @@ LingSha_list = ['精选白光灵砂', '精选大地灵砂', '精选大树灵砂'
                 '精选雷鸣灵砂', '精选雷之晶簇', '精选闪光灵砂', '精选微光灵砂', '精选险山灵砂', '精选晓光灵砂', '精选晓月灵砂', '精选夜光灵砂', '精选悠久灵砂']
 JingZhi_list = []  # 精制魔晶石备用
 choose_dict = {
-    0: "",
+    -1: "",
+    0: f" (clock['类型'] == '传说{now_patch_Legendary_star}星')",
     1: " (clock['类型'] == '白票收藏品')",
     2: " (clock['类型'] == '紫票收藏品')",
     3: " clock.类型.isin(LingSha_list)",
@@ -79,6 +81,7 @@ choose_dict = {
     5: " (clock['类型'] == '传说1星')",  # "(clock.材料名JP.isin(JingZhi_list)
     6: " (clock['类型'] == '水晶')",
     7: " (clock['类型'] == '晶簇')",
+    8: " (clock['类型'] == '高难精选')",
 
 }
 
