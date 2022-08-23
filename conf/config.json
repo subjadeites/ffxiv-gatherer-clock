@@ -1,1 +1,5 @@
-{"default_client": false, "is_auto_update": true, "is_GA": true, "selected_sound": "./resource/sound/4.wav", "top_windows_pos": [1836, 146], "top_windows_transparent": 255}
+﻿{
+  "default_client": true,
+  "is_auto_update": true,
+  "is_GA": true
+}

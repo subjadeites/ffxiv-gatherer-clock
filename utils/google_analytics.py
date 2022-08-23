@@ -24,8 +24,10 @@ from lib.update import version
 必须要注册V3版本，方法：https://zhuanlan.zhihu.com/p/371973749
 """
 
-# test_mode = True  # 测试时打开，不上传
-test_mode = False
+test_mode = True  # 测试时打开，不上传
+
+
+# test_mode = False
 
 
 def title_id() -> str:

@@ -5,6 +5,7 @@
 # @File    : my_wxpython.py
 import wx
 
+
 # 背景透明的文本框
 class TransparentText(wx.StaticText):  # 继承了wx.Statictext的类，并对相应的方法进行重写;
     def __init__(self, parent, id=wx.ID_ANY, label='', pos=wx.DefaultPosition, size=wx.DefaultSize,

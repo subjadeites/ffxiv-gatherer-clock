@@ -5,6 +5,64 @@
 # @Author  : subjadeites
 # @File : config.py
 import json
+import os
+
+from utils.google_analytics import Google_Analytics
+
+
+class Config:
+    """全局设置：包含clock所有用户设置。
+
+    is_auto_update: 是否自动更新\n
+    default_client: 启动时默认使用的客户端(True: 国际服，False: 国服)\n
+    is_GA: 是否开启谷歌分析\n
+    config_cant_read: 是否无法读取配置文件，用于主窗口实例化前检测\n
+    is_custom_tts: 是否使用自定义语音\n
+    custom_tts_word: 自定义语音的文字\n
+
+    """
+
+    def __init__(self):
+        # 读取配置文件
+        if os.path.exists(r'./conf') is False and os.path.exists(r'./lib') is True:
+            os.mkdir("conf")
+        try:
+            with open("./conf/config.json", "r", encoding="utf-8-sig") as f:
+                config_json = json.load(f)
+                self.is_auto_update = config_json.get('is_auto_update') if config_json.get('is_auto_update') is not None else True
+                self.default_client = config_json.get('default_client') if config_json.get('default_client') is not None else True
+                self.is_GA = config_json.get('is_GA') if config_json.get('is_GA') is not None else True
+                self.config_cant_read = False
+                self.is_custom_tts = config_json.get('is_custom_tts') if config_json.get('is_custom_tts') is not None else False
+                self.custom_tts_word = config_json.get('custom_tts_word') if config_json.get('custom_tts_word') is not None else ""
+                self.ga = Google_Analytics(can_upload=self.is_GA)  # 实例化谷歌分析
+        except FileNotFoundError:
+            self.default_client = True
+            self.config_cant_read = True
+            self.is_GA = True
+            self.is_auto_update = True
+            self.is_custom_tts = False
+            self.custom_tts_word = ""
+            self.ga = Google_Analytics()  # 实例化谷歌分析
+        except json.decoder.JSONDecodeError:
+            self.default_client = True
+            self.is_GA = True
+            self.config_cant_read = True
+            self.is_auto_update = True
+            self.is_custom_tts = False
+            self.custom_tts_word = ""
+            self.ga = Google_Analytics()  # 实例化谷歌分析
+        except:
+            self.default_client = True
+            self.is_GA = True
+            self.config_cant_read = True
+            self.is_auto_update = True
+            self.is_custom_tts = False
+            self.custom_tts_word = ""
+            self.ga = Google_Analytics()  # 实例化谷歌分析
+
+
+configs = Config()
 
 
 def top_windows_pos() -> tuple:
@@ -13,8 +71,7 @@ def top_windows_pos() -> tuple:
     :return: tuple：悬浮窗位置
     """
     try:
-        with open(r'C:\Users\chy19\OneDrive\Python\ffxiv-gatherer-clock\conf\config.json', 'r') as f:
-            # with open(r'./conf/config.json', 'r') as f:
+        with open(r'./conf/config.json', 'r', encoding="utf-8-sig") as f:
             result = json.load(f)
             if result.get('top_windows_pos') is None:
                 return (0, 0)
@@ -30,12 +87,12 @@ def top_windows_transparent() -> int:
     :return: int：悬浮窗透明度,0-255
     """
     try:
-        with open(r'./conf/config.json', 'r') as f:
+        with open(r'./conf/config.json', 'r', encoding="utf-8-sig") as f:
             result = json.load(f)
             if result.get('top_windows_transparent') is None:
                 return 255
-            elif result.get('top_windows_transparent') <100:
-                return 100 # 防止手动修改文件导致透明度过小
+            elif result.get('top_windows_transparent') < 100:
+                return 100  # 防止手动修改文件导致透明度过小
             else:
                 return result.get('top_windows_transparent')
     except FileNotFoundError:
@@ -49,11 +106,11 @@ def dump_top_windows_cfg(pos: tuple, transparent: int):
     :param transparent: int：悬浮窗透明度,0-255
     """
     try:
-        with open('./conf/config.json', 'r') as f:
+        with open('./conf/config.json', 'r', encoding="utf-8-sig") as f:
             result = json.load(f)
             result['top_windows_pos'] = pos
             result['top_windows_transparent'] = transparent
     except FileNotFoundError:
         result = {"default_client": True, "is_auto_update": True, "is_GA": True, "top_windows_pos": (0, 0)}
-    with open('./conf/config.json', 'w') as f:
-        json.dump(result, f)
+    with open('./conf/config.json', 'w', encoding="utf-8-sig") as f:
+        json.dump(result, f, ensure_ascii=False)

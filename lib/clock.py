@@ -8,7 +8,9 @@ from threading import Thread
 
 import pandas as pd
 
-from lib.public import choose_DLC_dict, choose_ZhiYe_dict, clock, func_select, tts, spk, Eorzea_time, ga, LingSha_list,choose_dict,cn_not_have_version
+from lib.public import choose_DLC_dict, choose_ZhiYe_dict, clock, func_select, Eorzea_time, LingSha_list, choose_dict, cn_not_have_version
+from lib.config import configs
+from utils.tts import tts, spk, custom_tts_parse
 from utils.google_analytics import title_id
 from utils.play_audio import PlayWav
 
@@ -17,11 +19,11 @@ from utils.play_audio import PlayWav
 LingSha_list = LingSha_list
 choose_dict = choose_dict
 
+
 # 闹钟核心方法
 # noinspection PyUnusedLocal
 def clock_out(lang, Eorzea_time_in, need_tts, func, ZhiYe, lvl_min, lvl_max, choose_DLC, client_verion,
               more_select_result, next_clock_time) -> int:
-
     from lib.windows import frame
     # 换日,兼容2.0里3个ET小时刷新的时限
     if choose_DLC in ["漆黑", "晓月", "红莲", "苍天"]:
@@ -34,7 +36,7 @@ def clock_out(lang, Eorzea_time_in, need_tts, func, ZhiYe, lvl_min, lvl_max, cho
             next_start_time = 0
         else:
             next_start_time = Eorzea_time_in + 1
-    if client_verion =="国服":
+    if client_verion == "国服":
         exclude_version = cn_not_have_version
     else:
         exclude_version = None
@@ -141,16 +143,14 @@ def clock_out(lang, Eorzea_time_in, need_tts, func, ZhiYe, lvl_min, lvl_max, cho
         if need_tts == 0:
             tts_word = ""
             for i in range(0, len(out_list)):
+                temp_i = out_list[i]
                 if out_list[i][0] in old_out_list and next_clock_time != -1:
                     pass
+                elif configs.is_custom_tts == True:
+                    tts_word += custom_tts_parse(custom_str=configs.custom_tts_word, out_list_current_line=temp_i)
                 else:
-                    nearby = '' if out_list[i][5] == '暂无数据' else out_list[i][5]
-                    tts_word = tts_word + out_list[i][0] + "。"
-                    # tts_word = tts_word + str(out_list[i][1]) + "级" + "。" TODO：后续看需求加入自定义tts
-                    tts_word = tts_word + out_list[i][2] + "。"
-                    tts_word = tts_word + out_list[i][3] + "。"
-                    tts_word = tts_word + out_list[i][4] + "。"
-                    tts_word = tts_word + nearby + "。"
+                    nearby = '' if temp_i[5] == '暂无数据' else temp_i[5]
+                    tts_word += f'{temp_i[0]}。{temp_i[2]}。{temp_i[3]}。{temp_i[4]}。{nearby}。'
             if len(clock_found_next) > 0 and out_list != out_list_next and tts_word != "":
                 tts_word = tts_word + "已为您更新下个时段预告" + "。"
             elif len(clock_found_next) == 0 and spk.Status.runningState == 1 and tts_word != "":
@@ -239,11 +239,11 @@ class Clock_Thread(Thread):
             temp_title = temp_title.split(',')
             temp_title.remove('')
             if self.choose_DLC == "自定义筛选":
-                ga.increase_counter(category="启动闹钟", name=self.client_version, title=title_id(),
-                                    other_parameter={"cd3": self.choose_DLC, "cd5": str(self.more_select_result)})
+                configs.ga.increase_counter(category="启动闹钟", name=self.client_version, title=title_id(),
+                                            other_parameter={"cd3": self.choose_DLC, "cd5": str(self.more_select_result)})
             else:
-                ga.increase_counter(category="启动闹钟", name=self.client_version, title=title_id(),
-                                    other_parameter={"cd3": self.choose_DLC, "cd4": str(temp_title)})
+                configs.ga.increase_counter(category="启动闹钟", name=self.client_version, title=title_id(),
+                                            other_parameter={"cd3": self.choose_DLC, "cd4": str(temp_title)})
         # endregion
         while True:
             if self.is_run is False:
@@ -254,8 +254,8 @@ class Clock_Thread(Thread):
                 frame.out_listctrl.Show(False)
                 frame.out_listctrl_next.Show(False)
                 globals()['clock_thread'] = Clock_Thread()
-                ga.increase_counter(category="关闭闹钟", name=self.client_version, title=title_id(),
-                                    other_parameter={"cd2": count_et.stop()})
+                configs.ga.increase_counter(category="关闭闹钟", name=self.client_version, title=title_id(),
+                                            other_parameter={"cd2": count_et.stop()})
                 globals()['count_et'] = Count_Et()
                 break
             else:

@@ -14,12 +14,12 @@ import requests
 import win32api
 import win32con
 import wx
-import wx.html2
 
 from lib.clock import Clock_Thread, clock_thread
-from lib.public import main_size, main_icon, ga, clock, Eorzea_time_start, tts, more_choose_size, config_cant_read, \
-    config_size, user_agent
-from lib.update import version, check_update, Check_Update, update_info
+from lib.public import main_size, main_icon, clock, Eorzea_time_start, more_choose_size, config_size
+from lib.update import version, check_update, Check_Update, update_info, user_agent
+from lib.config import configs
+from utils.tts import tts
 from utils.google_analytics import title_id
 from utils.play_audio import PlayWav
 
@@ -161,6 +161,7 @@ class MainWindow(wx.Frame):
         self.out_listctrl.InsertColumn(6, '开始ET', width=50)
         self.out_listctrl.InsertColumn(7, '结束ET', width=50)
         self.Bind(wx.EVT_LIST_ITEM_SELECTED, self.click_line_in_list, self.out_listctrl)
+        self.Bind(wx.EVT_LIST_ITEM_RIGHT_CLICK, self.copy_right_click_item, self.out_listctrl)
         self.result_box_text_2 = wx.StaticText(self.main_frame, size=(720, -1), pos=(10, self.line_pos[8]),
                                                label="=========下个时段时限点位=========", name='staticText_result',
                                                style=2321)
@@ -178,6 +179,7 @@ class MainWindow(wx.Frame):
         self.out_listctrl_next.InsertColumn(6, '开始ET', width=50)
         self.out_listctrl_next.InsertColumn(7, '结束ET', width=50)
         self.Bind(wx.EVT_LIST_ITEM_SELECTED, self.click_line_in_list_next, self.out_listctrl_next)
+        self.Bind(wx.EVT_LIST_ITEM_RIGHT_CLICK, self.copy_right_click_item, self.out_listctrl_next)
         # 用于在刚打开程序的时候显示提示，需要位于最上层
         self.result_box_text = wx.StaticText(self.main_frame, size=(720, 40), pos=(10, 440),
                                              label="当前无采集点提示\n请在上方设置后点击开启闹钟", name='staticText_result',
@@ -192,15 +194,15 @@ class MainWindow(wx.Frame):
         self.admin_auto_Ntp(self)
 
         try:
-            ga.increase_counter(category="程序操作", name="启动程序", title=title_id(),
-                                other_parameter={})
+            configs.ga.increase_counter(category="程序操作", name="启动程序", title=title_id(),
+                                        other_parameter={})
             self.accept_online_msg(self)
             globals()["check_update"] = Check_Update()
             check_update.setDaemon(True)
             check_update.start()  # 开启时自动检查更新一次
         except Exception:
-            ga.increase_counter(category="程序操作", name="启动程序", title=title_id(),
-                                other_parameter={})
+            configs.ga.increase_counter(category="程序操作", name="启动程序", title=title_id(),
+                                        other_parameter={})
 
     # 关于
     def OnAbout(self, event):
@@ -215,7 +217,7 @@ class MainWindow(wx.Frame):
         dlg.Destroy()  # 当结束之后关闭对话框
 
     # 退出事件
-    def OnExit(self, event):
+    def OnExit(self, event=None):
         try:
             clock_thread.stop()
             tts('')
@@ -321,8 +323,8 @@ class MainWindow(wx.Frame):
             top_windows.transparent = top_windows_transparent()  # 设置透明度变量
         top_windows.Show(True)
         self.Show(False)
-        ga.increase_counter(category="程序操作", name="打开悬浮窗", title=title_id(),
-                            other_parameter={})
+        configs.ga.increase_counter(category="程序操作", name="打开悬浮窗", title=title_id(),
+                                    other_parameter={})
 
     # 校准系统时间
     def OnClick_Ntp(self, event):
@@ -355,7 +357,7 @@ class MainWindow(wx.Frame):
         else:
             img_name = str(clock_found.iloc[0]['图片'])
             self.img_ctrl.Show(True)
-            img_adress = ('./resource/img/' + img_name + '.jpg')
+            img_adress = ('./resource/img/' + img_name + '.png')
             img = wx.Image(img_adress, wx.BITMAP_TYPE_ANY).Scale(500, 500)
             self.img_ctrl.SetBitmap(wx.Bitmap(img))
         self.out_listctrl_next.SetItemState(self.out_listctrl_next.GetFirstSelected(), 0, wx.LIST_STATE_SELECTED)
@@ -376,10 +378,19 @@ class MainWindow(wx.Frame):
         else:
             img_name = str(clock_found.iloc[0]['图片'])
             self.img_ctrl.Show(True)
-            img_adress = ('./resource/img/' + img_name + '.jpg')
+            img_adress = ('./resource/img/' + img_name + '.png')
             img = wx.Image(img_adress, wx.BITMAP_TYPE_ANY).Scale(500, 500)
             self.img_ctrl.SetBitmap(wx.Bitmap(img))
         self.out_listctrl.SetItemState(self.out_listctrl.GetFirstSelected(), 0, wx.LIST_STATE_SELECTED)
+
+    # 右击listcttl的时候复制到剪切板
+    def copy_right_click_item(self, event):
+        click_name = event.GetEventObject().GetItemText(event.GetEventObject().GetFirstSelected())
+        from win32clipboard import OpenClipboard, CloseClipboard, EmptyClipboard, SetClipboardData
+        OpenClipboard()
+        EmptyClipboard()
+        SetClipboardData(win32con.CF_UNICODETEXT, click_name)
+        CloseClipboard()
 
     # 动态根据客户端版本修正语言
     def event_choose_client(self, event):
@@ -400,7 +411,7 @@ class MainWindow(wx.Frame):
                 else:
                     fileList.remove(i)
             self.choose_sound.SetItems(fileList)
-            with open(r'./conf/config.json', 'r') as f:
+            with open(r'./conf/config.json', 'r', encoding="utf-8-sig") as f:
                 self.selected_sound = json.load(f).get('selected_sound')
                 if self.selected_sound is None:
                     pass
@@ -423,11 +434,11 @@ class MainWindow(wx.Frame):
         file_name = r'./resource/sound/' + self.choose_sound.GetStringSelection()
         PlayWav(file_name).start()
         self.selected_sound = file_name
-        with open(r'./conf/config.json', 'r') as f:
+        with open(r'./conf/config.json', 'r', encoding="utf-8-sig") as f:
             config_json = json.load(f)
-        with open(r'./conf/config.json', 'w') as f:
+        with open(r'./conf/config.json', 'w', encoding="utf-8-sig") as f:
             config_json['selected_sound'] = self.selected_sound
-            json.dump(config_json, f)
+            json.dump(config_json, f, ensure_ascii=False)
 
     # 自定义筛选时禁用简单筛选框，并弹出自定义筛选框
     def event_choose_select_way(self, event):
@@ -541,7 +552,7 @@ class MainWindow(wx.Frame):
     # 未读取到配置文件时，跳转配置窗口事件
     def new_config(self, *args):
         from lib.windows import Config_Windows
-        if config_cant_read is True or len(args) == 1:
+        if configs.config_cant_read is True or len(args) == 1:
             config_windows = Config_Windows(parent=self, title="设置")
             config_windows.SetMaxSize(config_size)
             config_windows.SetMinSize(config_size)
