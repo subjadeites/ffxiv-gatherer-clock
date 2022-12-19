@@ -4,11 +4,12 @@
 # @Author  : subjadeites
 # @File    : public.py
 import datetime
-import json
-import os
 import time
+from functools import cache
+from threading import Thread
 
 import pandas as pd
+import requests
 import wx
 
 # 图标设定
@@ -20,7 +21,7 @@ config_size = (365, 500)
 top_windows_size = (480, 350)
 
 # 版本差异设定
-cn_not_have_version = 6.2
+cn_not_have_version = 6.3
 now_patch_Legendary_star = 2
 
 Eorzea_time_start = "{:02d}：{:02d}".format(
@@ -60,13 +61,33 @@ def Eorzea_time() -> int:
     return Eorzea_hour
 
 
-# 导入采集时钟
-try:
-    clock = pd.read_csv("./resource/list.csv", encoding='UTF-8-sig')
-    pd.set_option('display.max_rows', None)
-    csv_cant_read = False
-except BaseException:
-    csv_cant_read = True
+global clock  # 定义全局变量clock，用于存储采集时钟。
+csv_cant_read = None
+
+
+# 导入采集时钟，强制使用网络版本
+@cache
+class Get_Clock(Thread):
+    def __init__(self, loading_windows):
+        super().__init__()
+        self.loading_windows = loading_windows
+
+    def run(self):
+        try:
+            clock_csv = requests.get("https://clock.ffxiv.wang/list", timeout=5).content
+            with open("./resource/list.csv", "wb") as f:
+                f.write(clock_csv)
+        except:
+            self.loading_frame.MessageDialog("网络连接失败，无法获取在线采集时钟数据库，将加载本地时钟。", "在线数据库暂时无法使用", wx.OK | wx.ICON_ERROR).ShowModal()
+        global csv_cant_read, clock  # 定义全局变量csv_cant_read，用于指示是否读取csv文件失败。
+        try:
+            clock = pd.read_csv("./resource/list.csv", encoding='UTF-8-sig')
+            pd.set_option('display.max_rows', None)
+            csv_cant_read = False
+        except BaseException:
+            clock = None
+            csv_cant_read = True
+
 
 LingSha_list = ['精选白光灵砂', '精选大地灵砂', '精选大树灵砂', '精选丰饶灵砂', '精选古树灵砂', '精选黑暗灵砂', '精选黄昏灵砂', '精选极光灵砂', '精选巨树灵砂', '精选巨岩灵砂',
                 '精选雷鸣灵砂', '精选雷之晶簇', '精选闪光灵砂', '精选微光灵砂', '精选险山灵砂', '精选晓光灵砂', '精选晓月灵砂', '精选夜光灵砂', '精选悠久灵砂']

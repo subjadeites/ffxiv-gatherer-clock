@@ -8,11 +8,10 @@ from threading import Thread
 
 import pandas as pd
 
-from lib.public import choose_DLC_dict, choose_ZhiYe_dict, clock, func_select, Eorzea_time, LingSha_list, choose_dict, cn_not_have_version
 from lib.config import configs
-from utils.tts import tts, spk, custom_tts_parse
-from utils.google_analytics import title_id
+from lib.public import choose_DLC_dict, choose_ZhiYe_dict, clock, func_select, Eorzea_time, LingSha_list, choose_dict, cn_not_have_version
 from utils.play_audio import PlayWav
+from utils.tts import tts, spk, custom_tts_parse
 
 # 临时初始化使用，避免自动格式化删除
 # TODO：闹钟方法优化
@@ -238,12 +237,6 @@ class Clock_Thread(Thread):
                 temp_title += func_to_title_dict.get(v)
             temp_title = temp_title.split(',')
             temp_title.remove('')
-        if self.choose_DLC == "自定义筛选":
-            configs.ga.increase_counter(category="启动闹钟", name=self.client_version, title=title_id(),
-                                        other_parameter={"cd3": self.choose_DLC, "cd5": str(self.more_select_result)})
-        else:
-            configs.ga.increase_counter(category="启动闹钟", name=self.client_version, title=title_id(),
-                                        other_parameter={"cd3": self.choose_DLC, "cd4": str(temp_title)})
         # endregion
         while True:
             if self.is_run is False:
@@ -254,8 +247,6 @@ class Clock_Thread(Thread):
                 frame.out_listctrl.Show(False)
                 frame.out_listctrl_next.Show(False)
                 globals()['clock_thread'] = Clock_Thread()
-                configs.ga.increase_counter(category="关闭闹钟", name=self.client_version, title=title_id(),
-                                            other_parameter={"cd2": count_et.stop()})
                 globals()['count_et'] = Count_Et()
                 break
             else:

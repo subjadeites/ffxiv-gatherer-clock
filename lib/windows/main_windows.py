@@ -8,23 +8,19 @@ import json
 import os
 import time
 import webbrowser
-from hashlib import md5
 
-import requests
-import win32api
 import win32con
 import wx
 
 from lib.clock import Clock_Thread, clock_thread
-from lib.public import main_size, main_icon, clock, Eorzea_time_start, more_choose_size, config_size
-from lib.update import version, check_update, Check_Update, update_info, user_agent
 from lib.config import configs
-from utils.tts import tts
-from utils.google_analytics import title_id
+from lib.public import main_size, main_icon, clock, Eorzea_time_start, more_choose_size, config_size
+from lib.update import version, check_update, Check_Update, update_info
+from lib.web_service import accept_online_msg
 from utils.play_audio import PlayWav
+from utils.tts import tts
 
 
-# noinspection PyUnusedLocal
 class MainWindow(wx.Frame):
     def __init__(self, parent, title):
         super().__init__(parent=None, title=title, size=main_size)  # 继承wx.Frame类
@@ -117,12 +113,12 @@ class MainWindow(wx.Frame):
         self.choose_func_2 = wx.CheckBox(self.main_frame, 92, "紫票收藏品", pos=(265, self.line_pos[3]))
         self.choose_func_3 = wx.CheckBox(self.main_frame, 93, "精选灵砂", pos=(350, self.line_pos[3]))
         self.choose_func_4 = wx.CheckBox(self.main_frame, 94, "传说点", pos=(422, self.line_pos[3]))
-        self.choose_func_8 = wx.CheckBox(self.main_frame, 98 , '高难精选', pos=(482, self.line_pos[3]))
+        self.choose_func_8 = wx.CheckBox(self.main_frame, 98, '高难精选', pos=(482, self.line_pos[3]))
         self.choose_func_5 = wx.CheckBox(self.main_frame, 95, "传说：精制魔晶石", pos=(555, self.line_pos[3]))
         self.choose_func_6 = wx.CheckBox(self.main_frame, 96, "水晶", pos=(675, self.line_pos[3]))
         self.choose_func_7 = wx.CheckBox(self.main_frame, 97, "晶簇", pos=(725, self.line_pos[3]))
         self.choose_func_0 = wx.CheckBox(self.main_frame, 90, "[6.2]610HQ材料", pos=(225, self.line_pos[4]))
-        self.now_patch_font = wx.Font(9,74,90,700,False,'Microsoft YaHei UI',28)
+        self.now_patch_font = wx.Font(9, 74, 90, 700, False, 'Microsoft YaHei UI', 28)
         self.choose_func_0.SetFont(self.now_patch_font)
         self.Bind(wx.EVT_CHECKBOX, self.choose_func_auto_write, self.choose_func_5)
         self.Bind(wx.EVT_CHECKBOX, self.choose_func_auto_write, self.choose_func_6)
@@ -192,21 +188,20 @@ class MainWindow(wx.Frame):
         self.img_ctrl.Show(False)
         self.Centre()
         self.Bind(wx.EVT_CLOSE, self.OnExit)
-        self.Show(True)
 
         # 管理员权限自动校准时钟
         self.admin_auto_Ntp(self)
 
         try:
-            configs.ga.increase_counter(category="程序操作", name="启动程序", title=title_id(),
-                                        other_parameter={})
-            self.accept_online_msg(self)
+            accept_online_msg()
             globals()["check_update"] = Check_Update()
             check_update.setDaemon(True)
             check_update.start()  # 开启时自动检查更新一次
         except Exception:
-            configs.ga.increase_counter(category="程序操作", name="启动程序", title=title_id(),
-                                        other_parameter={})
+            pass
+        finally:
+            pass  # 取消GA
+
         # 设置强调字体颜色
         self.choose_func_0.SetForegroundColour((255, 0, 0, 255))
 
@@ -331,8 +326,6 @@ class MainWindow(wx.Frame):
             top_windows.transparent = top_windows_transparent()  # 设置透明度变量
         top_windows.Show(True)
         self.Show(False)
-        configs.ga.increase_counter(category="程序操作", name="打开悬浮窗", title=title_id(),
-                                    other_parameter={})
 
     # 校准系统时间
     def OnClick_Ntp(self, event):
@@ -567,7 +560,6 @@ class MainWindow(wx.Frame):
             config_windows.SetMaxSize(config_size)
             config_windows.SetMinSize(config_size)
             config_windows.Show(True)
-            self.Show(False)
 
     # 传递配置数据
     def transfer_config(self, _default_client, _is_auto_update, _is_GA):
@@ -587,64 +579,6 @@ class MainWindow(wx.Frame):
         else:
             self.button_more_select.Disable()
             self.button_more_select.Show(True)
-
-    # 热公告支持
-    @staticmethod
-    def accept_online_msg(self):
-        online_msg_json = {}
-        try:  # 优先读取本地代码，测试用
-            with open(r'./msg.json', encoding="utf-8") as f:
-                online_msg_json = json.load(f)
-        except BaseException:  # 请求在线热公告
-            try:
-                try:
-                    url = 'https://ghproxy.com/https://raw.githubusercontent.com/subjadeites/ffxiv-gatherer-clock/master/msg.json'
-                    response = requests.get(url, timeout=10, headers={'User-Agent': user_agent})
-                    online_msg_json = response.json()
-                except BaseException:
-                    url = 'https://ffxivclock.gamedatan.com/msg'
-                    response = requests.get(url, timeout=10, headers={'User-Agent': user_agent})
-                    online_msg_json = response.json()
-            except BaseException:
-                pass
-        title = online_msg_json.get('title')
-        msg_text = online_msg_json.get('msg')
-        md_type = online_msg_json.get('type')
-        online_msg_json_md5 = md5(str(online_msg_json).encode(encoding='UTF-8')).hexdigest()
-        try:
-            with open(r'./conf/online_msg_read', "r", encoding="UTF-8") as f:
-                have_read_md5 = f.read()
-        except FileNotFoundError:
-            have_read_md5 = ""
-        if online_msg_json == {} or have_read_md5 == online_msg_json_md5 or online_msg_json.get('is_push') is False:
-            pass
-        else:
-            if online_msg_json.get('type') == "YES":
-                online_msg_md = wx.MessageDialog(None, msg_text, title, wx.OK | wx.ICON_INFORMATION)
-                online_msg_md.ShowModal()
-                online_msg_md.Destroy()
-                try:
-                    if os.path.exists(r'./conf/online_msg_read') is True:
-                        win32api.SetFileAttributes(r'./conf/online_msg_read', win32con.FILE_ATTRIBUTE_NORMAL)
-                    with open(r'./conf/online_msg_read', "w", encoding="UTF-8") as f:
-                        f.write(online_msg_json_md5)
-                    win32api.SetFileAttributes(r'./conf/online_msg_read', win32con.FILE_ATTRIBUTE_HIDDEN)
-                except BaseException:
-                    pass
-            elif online_msg_json.get('type') == "YES_NO":
-                online_msg_md = wx.MessageDialog(None, msg_text, title, wx.YES_NO | wx.ICON_INFORMATION)
-                online_msg_md.ShowModal()
-                online_msg_md.Destroy()
-                try:
-                    if os.path.exists(r'./conf/online_msg_read') is True:
-                        win32api.SetFileAttributes(r'./conf/online_msg_read', win32con.FILE_ATTRIBUTE_NORMAL)
-                    with open(r'./conf/online_msg_read', "w+", encoding="UTF-8") as f:
-                        f.write(online_msg_json_md5)
-                    win32api.SetFileAttributes(r'./conf/online_msg_read', win32con.FILE_ATTRIBUTE_HIDDEN)
-                except BaseException:
-                    pass
-            else:
-                pass
 
     # 校准本地时间
     @staticmethod

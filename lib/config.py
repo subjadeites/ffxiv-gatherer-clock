@@ -7,8 +7,6 @@
 import json
 import os
 
-from utils.google_analytics import Google_Analytics
-
 
 class Config:
     """全局设置：包含clock所有用户设置。
@@ -31,35 +29,36 @@ class Config:
                 config_json = json.load(f)
                 self.is_auto_update = config_json.get('is_auto_update') if config_json.get('is_auto_update') is not None else True
                 self.default_client = config_json.get('default_client') if config_json.get('default_client') is not None else True
-                self.is_GA = config_json.get('is_GA') if config_json.get('is_GA') is not None else True
+                self.is_online_csv = config_json.get('is_online_csv') if config_json.get('is_online_csv') is not None else True
                 self.config_cant_read = False
                 self.is_custom_tts = config_json.get('is_custom_tts') if config_json.get('is_custom_tts') is not None else False
                 self.custom_tts_word = config_json.get('custom_tts_word') if config_json.get('custom_tts_word') is not None else ""
-                self.ga = Google_Analytics(can_upload=self.is_GA)  # 实例化谷歌分析
+            if config_json.get('is_GA') is not None: # 用于删除旧版本的GA设置 TODO：2.0.0版本后删除
+                del config_json['is_GA']
+                with open("./conf/config.json", "w", encoding="utf-8-sig") as f:
+                    json.dump(config_json, f, ensure_ascii=False)
+
         except FileNotFoundError:
             self.default_client = True
             self.config_cant_read = True
-            self.is_GA = True
+            self.is_online_csv = True
             self.is_auto_update = True
             self.is_custom_tts = False
             self.custom_tts_word = ""
-            self.ga = Google_Analytics()  # 实例化谷歌分析
         except json.decoder.JSONDecodeError:
             self.default_client = True
-            self.is_GA = True
+            self.is_online_csv = True
             self.config_cant_read = True
             self.is_auto_update = True
             self.is_custom_tts = False
             self.custom_tts_word = ""
-            self.ga = Google_Analytics()  # 实例化谷歌分析
         except:
             self.default_client = True
-            self.is_GA = True
+            self.is_online_csv = True
             self.config_cant_read = True
             self.is_auto_update = True
             self.is_custom_tts = False
             self.custom_tts_word = ""
-            self.ga = Google_Analytics()  # 实例化谷歌分析
 
 
 configs = Config()

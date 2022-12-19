@@ -10,8 +10,8 @@ from threading import Thread
 import requests
 import wx
 
-version = "1.4.7"
-user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.102 Safari/537.36"
+version = "1.5.0"
+user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/104.0.0.0 Safari/537.36"
 
 
 # 更新弹窗
@@ -55,7 +55,7 @@ class Check_Update(Thread):
             else:
                 try:
                     try:
-                        url = 'https://ghproxy.com/https://raw.githubusercontent.com/subjadeites/ffxiv-gatherer-clock/master/version.json'
+                        url = 'https://ritualsong.works/subjadeites/ffxiv-gatherer-clock/raw/branch/master/version.json'
                         response = requests.get(url, timeout=7, headers={'User-Agent': user_agent})
                         version_online_json = response.json()
                         version_online = version_online_json.get("Version")
@@ -63,7 +63,7 @@ class Check_Update(Thread):
                         version_online_as_tuple = tuple(int(x) for x in version_online.split('.'))
                         version_as_tuple = tuple(int(x) for x in version.split('.'))
                     except BaseException:
-                        url = 'https://ffxivclock.gamedatan.com/version'
+                        url = 'https://ffxivclock.idataservice.com/version'
                         response = requests.get(url, timeout=7, headers={'User-Agent': user_agent})
                         version_online_json = response.json()
                         version_online = version_online_json.get("Version")

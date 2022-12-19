@@ -11,7 +11,6 @@ import wx.lib.buttons as lib_btn
 from lib.config import configs
 from lib.public import config_size, main_icon
 from lib.update import Check_Update, check_update
-from utils.google_analytics import Google_Analytics, title_id
 from utils.tts import tts, custom_tts_parse
 
 
@@ -33,18 +32,16 @@ class Config_Windows(wx.Frame):
         self.Update_T = wx.RadioButton(self.main_frame, pos=(100, pos_Y[3]), name='Update_T', label='启用', style=wx.RB_GROUP)
         self.Update_F = wx.RadioButton(self.main_frame, pos=(200, pos_Y[3]), name='Update_F', label='禁用')
 
-        self.choose_func_text = wx.StaticText(self.main_frame, label='是否加入体验改善计划（匿名上报数据至google analytics）：', pos=(10, pos_Y[4]))
-        self.GA_T = wx.RadioButton(self.main_frame, pos=(100, pos_Y[5]), name='GA_T', label='启用', style=wx.RB_GROUP)
-        self.GA_F = wx.RadioButton(self.main_frame, pos=(200, pos_Y[5]), name='GA_F', label='禁用')
-        self.more_about_GA = lib_btn.ThemedGenBitmapTextButton(self.main_frame, size=GUI_size[0], pos=(90, pos_Y[6]), bitmap=None, label='了解更多有关体验改善计划', name='more_about_GA')
-        self.Bind(wx.EVT_BUTTON, self.event_more_about_GA, self.more_about_GA)
+        self.choose_func_text = wx.StaticText(self.main_frame, label='使用在线CSV（不使用将无法自动获取采集点更新）：', pos=(10, pos_Y[4]))
+        self.online_csv_T = wx.RadioButton(self.main_frame, pos=(100, pos_Y[5]), name='online_csv_T', label='是', style=wx.RB_GROUP)
+        self.online_csv_F = wx.RadioButton(self.main_frame, pos=(200, pos_Y[5]), name='online_csv_F', label='否')
 
-        self.custom_tts_text = wx.StaticText(self.main_frame, label='是否使用自定义TTS：', pos=(10, 190))
-        self.custom_tts_on = wx.RadioButton(self.main_frame, pos=(100, 215), name='custom_tts_on', label='开启', style=wx.RB_GROUP)
-        self.custom_tts_off = wx.RadioButton(self.main_frame, pos=(200, 215), name='custom_tts_off', label='关闭')
+        self.custom_tts_text = wx.StaticText(self.main_frame, label='是否使用自定义TTS：', pos=(10, 160))
+        self.custom_tts_on = wx.RadioButton(self.main_frame, pos=(100, 215 - 40), name='custom_tts_on', label='开启', style=wx.RB_GROUP)
+        self.custom_tts_off = wx.RadioButton(self.main_frame, pos=(200, 215 - 40), name='custom_tts_off', label='关闭')
         self.Bind(wx.EVT_RADIOBUTTON, self.event_custom_tts_on_off, self.custom_tts_on)
         self.Bind(wx.EVT_RADIOBUTTON, self.event_custom_tts_on_off, self.custom_tts_off)
-        self.custom_tts_input = wx.TextCtrl(self.main_frame, size=(320, 70), pos=(10, pos_Y[8]), value='', name='text', style=wx.TE_BESTWRAP)
+        self.custom_tts_input = wx.TextCtrl(self.main_frame, size=(320, 70 + 45), pos=(10, pos_Y[8] - 40), value='', name='text', style=wx.TE_BESTWRAP)
         self.custom_tts_info = wx.StaticText(self.main_frame, label='目前支持的定型文：%道具名%、%等级%、%职业%、\n%类型%、%地区%、%靠近水晶%、%开始ET%、%结束ET%', pos=(10, pos_Y[9]), style=wx.TE_BESTWRAP)
         self.custom_tts_test = wx.Button(self.main_frame, label='自定义TTS测试', pos=(120, pos_Y[10]))
         self.Bind(wx.EVT_BUTTON, self.event_custom_tts_test, self.custom_tts_test)
@@ -64,8 +61,8 @@ class Config_Windows(wx.Frame):
                     self.version_cn.SetValue(True)
                 if config_json.get('is_auto_update') is False:
                     self.Update_F.SetValue(True)
-                if config_json.get('is_GA') is False:
-                    self.GA_F.SetValue(True)
+                if config_json.get('is_online_csv') is False:
+                    self.online_csv_F.SetValue(True)
                 if config_json.get('custom_tts_word') is not None:
                     self.custom_tts_input.SetValue(config_json.get('custom_tts_word'))
                 if config_json.get('is_custom_tts') is not True:
@@ -98,12 +95,10 @@ class Config_Windows(wx.Frame):
             write_dict['is_auto_update'] = True
         else:
             write_dict['is_auto_update'] = False
-            configs.ga.increase_counter(category="设置操作", name="关闭自动更新功能", title=title_id(), other_parameter={})
-        if self.GA_T.GetValue() is True:
-            write_dict['is_GA'] = True
+        if self.online_csv_T.GetValue() is True:
+            write_dict['is_online_csv'] = True
         else:
-            configs.ga.increase_counter(category="设置操作", name="关闭GA功能", title=title_id(), other_parameter={})
-            write_dict['is_GA'] = False
+            write_dict['is_online_csv'] = False
         write_dict['is_custom_tts'] = True if self.custom_tts_on.GetValue() is True else False
         write_dict['custom_tts_word'] = self.custom_tts_input.GetValue()
 
@@ -112,8 +107,7 @@ class Config_Windows(wx.Frame):
         # 更新设置类
         configs.is_auto_update = write_dict['is_auto_update']
         configs.default_client = write_dict['default_client']
-        configs.is_GA = write_dict['is_GA']
-        configs.ga = Google_Analytics(can_upload=configs.is_GA)
+        configs.is_online_csv = write_dict['is_online_csv']
         configs.is_custom_tts = write_dict['is_custom_tts']
         configs.custom_tts_word = write_dict['custom_tts_word']
         # 重新显示主窗口
