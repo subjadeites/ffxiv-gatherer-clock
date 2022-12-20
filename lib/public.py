@@ -78,7 +78,7 @@ class Get_Clock(Thread):
             with open("./resource/list.csv", "wb") as f:
                 f.write(clock_csv)
         except:
-            self.loading_frame.MessageDialog("网络连接失败，无法获取在线采集时钟数据库，将加载本地时钟。", "在线数据库暂时无法使用", wx.OK | wx.ICON_ERROR).ShowModal()
+            wx.MessageDialog(None,"网络连接失败，无法获取在线采集时钟数据库，将加载本地时钟。", "在线数据库暂时无法使用", wx.OK | wx.ICON_ERROR).ShowModal()
         global csv_cant_read, clock  # 定义全局变量csv_cant_read，用于指示是否读取csv文件失败。
         try:
             clock = pd.read_csv("./resource/list.csv", encoding='UTF-8-sig')

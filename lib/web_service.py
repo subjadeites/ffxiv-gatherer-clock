@@ -55,21 +55,17 @@ def accept_online_msg():
             pass
         else:
             if msg_type == "YES":
-                online_msg_md = wx.MessageDialog(None, msg_text, title, wx.OK | wx.ICON_INFORMATION)
-                online_msg_md.ShowModal()
-                online_msg_md.Destroy()
+                wx.MessageDialog(None, msg_text, title, wx.OK | wx.ICON_INFORMATION).ShowModal()
                 try:
                     if os.path.exists(r'./conf/online_msg_read') is True:
                         win32api.SetFileAttributes(r'./conf/online_msg_read', win32con.FILE_ATTRIBUTE_NORMAL)
                     with open(r'./conf/online_msg_read', "w", encoding="UTF-8") as f:
                         f.write(online_msg_json_md5)
                     win32api.SetFileAttributes(r'./conf/online_msg_read', win32con.FILE_ATTRIBUTE_HIDDEN)
-                except BaseException:
-                    pass
+                except Exception as e:
+                    print(e)
             elif msg_type == "YES_NO":
-                online_msg_md = wx.MessageDialog(None, msg_text, title, wx.YES_NO | wx.ICON_INFORMATION)
-                online_msg_md.ShowModal()
-                online_msg_md.Destroy()
+                wx.MessageDialog(None, msg_text, title, wx.YES_NO | wx.ICON_INFORMATION).ShowModal()
                 try:
                     if os.path.exists(r'./conf/online_msg_read') is True:
                         win32api.SetFileAttributes(r'./conf/online_msg_read', win32con.FILE_ATTRIBUTE_NORMAL)

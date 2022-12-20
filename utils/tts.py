@@ -38,10 +38,8 @@ try:
     spk = win32com.client.Dispatch("SAPI.SpVoice")
     tts('')
 except:
-    md = wx.MessageDialog(None, """系统TTS不存在，无法导入。点击确定查看文档解决。""", "导入系统TTS失败！")  # 语法是(self, 内容, 标题, ID)
-    md.ShowModal()
+    wx.MessageDialog(None, """系统TTS不存在，无法导入。点击确定查看文档解决。""", "导入系统TTS失败！").ShowModal()
     webbrowser.open("https://bbs.nga.cn/read.php?tid=29755989&page=6#pid598201942")
-    md.Destroy()
     exit()
 
 custom_str_to_line_dict = {
@@ -68,7 +66,8 @@ def custom_tts_parse(custom_str: str, out_list_current_line: list) -> Optional[s
         如果正确解析，则返回需要TTS播报的内容，否则返回None
     """
     if custom_str is None or custom_str == '':
-        md = wx.MessageDialog(None, """TTS定型文配置有误，请进入设置重新配置或者关闭自定义""", "自定义TTS引擎初始化失败")  # 语法是(self, 内容, 标题, ID)
+        md = wx.MessageDialog(None, """TTS定型文配置有误，请进入设置重新配置或者关闭自定义""",
+                              "自定义TTS引擎初始化失败")  # 语法是(self, 内容, 标题, ID)
         md.ShowModal()
         md.Destroy()
         return None
