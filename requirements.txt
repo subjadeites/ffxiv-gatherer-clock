@@ -9,3 +9,4 @@ pyinstaller==4.10
 ntplib
 httpx
 aiofiles
+urllib3==1.25.11

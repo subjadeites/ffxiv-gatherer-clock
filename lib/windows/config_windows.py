@@ -78,16 +78,6 @@ class Config_Windows(wx.Frame):
 
         self.Centre()
 
-    @staticmethod
-    def event_more_about_GA(event):
-        title = "关于体验改善计划"
-        msg_text = "体验改善计划基于google analytics V3（简称GA3），利用GA3提供的接口，上报开发者需要的参数。" \
-                   "与一般使用GA3不同，本工具使用GA3时，对起到识别作用的计算机名和UUID进行了MD5加密。且报送的报告中不会包含与使用者隐私相关的信息。\n" \
-                   "报送的信息只包括：【已MD5加密的识别码】、【系统信息】、【屏幕分辨率】、【使用功能】、【当前时间戳】。 "
-        more_about_GA_md = wx.MessageDialog(None, msg_text, title, wx.OK | wx.ICON_INFORMATION)
-        more_about_GA_md.ShowModal()
-        more_about_GA_md.Destroy()
-
     def event_save_config(self, event):
         write_dict = {}
         write_dict['default_client'] = True if self.version_SE.GetValue() is True else False
@@ -135,9 +125,8 @@ class Config_Windows(wx.Frame):
         if self.custom_tts_input.GetValue() == '':
             wx.MessageBox('请输入自定义TTS的定型文！', '提示', wx.OK | wx.ICON_INFORMATION)
         else:
-            if (
-                    tts_word := custom_tts_parse(custom_str=self.custom_tts_input.GetValue(),
-                                                 out_list_current_line=['道具名', '等级', '职业', '类型', '地区', '靠近水晶', '开始ET', '结束ET', ])) is not None:
+            tts_word = custom_tts_parse(custom_str=self.custom_tts_input.GetValue(), out_list_current_line=['道具名', '等级', '职业', '类型', '地区', '靠近水晶', '开始ET', '结束ET', ])
+            if tts_word is not None:
                 tts(tts_word)
                 wx.MessageBox('测试完成！\n如果听到符合输入的文本，点击保存即可生效！', '提示', wx.OK | wx.ICON_INFORMATION)
             else:

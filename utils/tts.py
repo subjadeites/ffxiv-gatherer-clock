@@ -21,7 +21,9 @@ def tts(msg: str, can_not_break: bool = False):
         msg: TTS播报内容
         can_not_break: 是否可以被打断，默认False=能被打断
     """
-    if spk.Status.runningState == 2 and can_not_break is False:
+    if spk is None:
+        pass
+    elif spk.Status.runningState == 2 and can_not_break is False:
         spk.Speak("", 2)
         spk.Speak(msg, 1)
     elif spk.Status.runningState == 2 and can_not_break is False:
@@ -38,9 +40,13 @@ try:
     spk = win32com.client.Dispatch("SAPI.SpVoice")
     tts('')
 except:
-    wx.MessageDialog(None, """系统TTS不存在，无法导入。点击确定查看文档解决。""", "导入系统TTS失败！").ShowModal()
-    webbrowser.open("https://bbs.nga.cn/read.php?tid=29755989&page=6#pid598201942")
-    exit()
+    tts_err = wx.MessageDialog(None, "系统TTS不存在，无法导入。\n点击 确定 查看文档解决。\n点击 取消 以限制模式运行。", "导入系统TTS失败！",
+                     wx.YES_NO | wx.ICON_ERROR)
+    if tts_err.ShowModal() == wx.ID_YES:
+        webbrowser.open("https://bbs.nga.cn/read.php?tid=29755989&page=6#pid598201942")
+        exit()
+    else:
+        spk = None
 
 custom_str_to_line_dict = {
     '道具名': 0,

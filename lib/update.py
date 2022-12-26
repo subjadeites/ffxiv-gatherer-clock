@@ -10,7 +10,7 @@ from threading import Thread
 import requests
 import wx
 
-version = "1.5.1"
+version = "1.5.2"
 user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/104.0.0.0 Safari/537.36"
 
 
@@ -74,7 +74,6 @@ class Check_Update(Thread):
                     self.is_run = False
                     update_error_dlg = _update_error_dlg()
                     update_error_dlg.ShowModal()
-                    update_error_dlg.Destroy()  # 当结束之后关闭对话框
                     self.stop()
                 else:
                     if version_online == version:
@@ -93,7 +92,6 @@ class Check_Update(Thread):
                                 webbrowser.open("https://github.com/subjadeites/ffxiv-gatherer-clock")
                             else:
                                 webbrowser.open("https://bbs.nga.cn/read.php?tid=29755989")
-                            update_info_msg.Destroy()
                         else:
                             self.stop()
 
