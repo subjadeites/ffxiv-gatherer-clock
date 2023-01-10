@@ -103,8 +103,11 @@ class MainWindow(wx.Frame):
         self.choose_func_6 = wx.CheckBox(self.main_frame, 96, "水晶", pos=(675, self.line_pos[3]))
         self.choose_func_7 = wx.CheckBox(self.main_frame, 97, "晶簇", pos=(725, self.line_pos[3]))
         self.choose_func_0 = wx.CheckBox(self.main_frame, 90, "[6.2]610HQ材料", pos=(225, self.line_pos[4]))
+        self.choose_func_01 = wx.CheckBox(self.main_frame, 901, "[6.3]生产采集绿装材料", pos=(345, self.line_pos[4]))
         self.now_patch_font = wx.Font(9, 74, 90, 700, False, 'Microsoft YaHei UI', 28)
+        self.now_patch_font1 = wx.Font(9, 74, 90, 700, False, 'Microsoft YaHei UI', 28)
         self.choose_func_0.SetFont(self.now_patch_font)
+        self.choose_func_01.SetFont(self.now_patch_font1)
         self.Bind(wx.EVT_CHECKBOX, self.choose_func_auto_write, self.choose_func_5)
         self.Bind(wx.EVT_CHECKBOX, self.choose_func_auto_write, self.choose_func_6)
         self.Bind(wx.EVT_CHECKBOX, self.choose_func_auto_write, self.choose_func_7)
@@ -164,6 +167,7 @@ class MainWindow(wx.Frame):
 
         # 设置强调字体颜色
         self.choose_func_0.SetForegroundColour((255, 0, 0, 255))
+        self.choose_func_01.SetForegroundColour((255, 0, 0, 255))
 
         # 管理员权限自动校准时钟
         self.admin_auto_Ntp(self)
@@ -236,6 +240,7 @@ class MainWindow(wx.Frame):
                 choose_func_result[7] = self.choose_func_7.IsChecked()  # 检测晶簇是否勾选
                 choose_func_result[8] = self.choose_func_8.IsChecked()  # 检测高难精炼是否勾选
                 choose_func_result[0] = self.choose_func_0.IsChecked()  # 检测当前patch是否勾选
+                choose_func_result[10] = self.choose_func_01.IsChecked()  # 检测当前patch生产采集是否勾选
                 choose_DLC_result = ['晓月', '全部', '漆黑', '红莲', '苍天', '新生'][
                     self.choose_DLC.GetSelection()]  # 简单筛选DLC版本
             else:

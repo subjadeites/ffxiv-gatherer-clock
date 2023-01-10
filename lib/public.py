@@ -98,7 +98,8 @@ LingSha_list = ['精选白光灵砂', '精选大地灵砂', '精选大树灵砂'
 JingZhi_list = []  # 精制魔晶石备用
 choose_dict = {
     -1: "",
-    0: f" (clock['类型'] == '传说{now_patch_Legendary_star}星')",
+    0: f"(clock['类型'] == '传说{now_patch_Legendary_star}星') & (clock['patch'] == 6.2)",
+    10: f"(clock['patch'] == 6.3)",
     1: " (clock['类型'] == '白票收藏品')",
     2: " (clock['类型'] == '紫票收藏品')",
     3: " clock.类型.isin(LingSha_list)",

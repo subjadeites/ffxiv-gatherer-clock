@@ -227,17 +227,6 @@ class Clock_Thread(Thread):
     def run(self):
         from lib.windows import frame
         next_clock_time = self.next_clock_time
-        # region google统计埋点
-        temp_title = ""
-        func_to_title_dict = {-1: "全部,", 0: "当前patch材料,", 1: "白票,", 2: "紫票,", 3: "灵砂,", 4: "传说,", 5: "包浆,", 6: "水晶,", 7: "晶簇,", 8: "高难精选,"}
-        if self.func == [-1]:
-            temp_title = "[全部]"
-        else:
-            for v in self.func:
-                temp_title += func_to_title_dict.get(v)
-            temp_title = temp_title.split(',')
-            temp_title.remove('')
-        # endregion
         while True:
             if self.is_run is False:
                 frame.button_run.Enable()
