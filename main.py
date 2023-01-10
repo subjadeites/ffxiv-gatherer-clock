@@ -72,7 +72,7 @@ if __name__ == '__main__':
 
     loading_windows = Loading_Windows(None, title="加载中")
     # 热加载csv
-    get_clock = public.Get_Clock(loading_windows)
+    get_clock = public.Get_Clock()
     get_clock.start()
 
     app.MainLoop()

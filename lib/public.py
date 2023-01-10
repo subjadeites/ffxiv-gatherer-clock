@@ -66,27 +66,31 @@ csv_cant_read = None
 
 
 # 导入采集时钟，强制使用网络版本
-@cache
 class Get_Clock(Thread):
-    def __init__(self, loading_windows):
+    def __init__(self):
         super().__init__()
-        self.loading_windows = loading_windows
 
     def run(self):
         try:
-            clock_csv = requests.get("https://clock.ffxiv.wang/list", timeout=5).content
-            with open("./resource/list.csv", "wb") as f:
-                f.write(clock_csv)
+            try:
+                clock_csv = requests.get("https://ritualsong.works/subjadeites/ffxiv-gatherer-clock/raw/branch/master/resource/list.csv", timeout=5).content
+                with open("./resource/list.csv", "wb") as f:
+                    f.write(clock_csv)
+            except:
+                clock_csv = requests.get("https://clock.ffxiv.wang/list", timeout=5).content
+                with open("./resource/list.csv", "wb") as f:
+                    f.write(clock_csv)
         except:
-            wx.MessageDialog(None,"网络连接失败，无法获取在线采集时钟数据库，将加载本地时钟。", "在线数据库暂时无法使用", wx.OK | wx.ICON_ERROR).ShowModal()
-        global csv_cant_read, clock  # 定义全局变量csv_cant_read，用于指示是否读取csv文件失败。
-        try:
-            clock = pd.read_csv("./resource/list.csv", encoding='UTF-8-sig')
-            pd.set_option('display.max_rows', None)
-            csv_cant_read = False
-        except BaseException:
-            clock = None
-            csv_cant_read = True
+            wx.MessageDialog(None, "网络连接失败，无法获取在线采集时钟数据库，将加载本地时钟。", "在线数据库暂时无法使用", wx.OK | wx.ICON_ERROR).ShowModal()
+        finally:
+            global csv_cant_read, clock  # 定义全局变量csv_cant_read，用于指示是否读取csv文件失败。
+            try:
+                clock = pd.read_csv("./resource/list.csv", encoding='UTF-8-sig')
+                pd.set_option('display.max_rows', None)
+                csv_cant_read = False
+            except BaseException:
+                clock = None
+                csv_cant_read = True
 
 
 LingSha_list = ['精选白光灵砂', '精选大地灵砂', '精选大树灵砂', '精选丰饶灵砂', '精选古树灵砂', '精选黑暗灵砂', '精选黄昏灵砂', '精选极光灵砂', '精选巨树灵砂', '精选巨岩灵砂',
