@@ -9,6 +9,7 @@ import os
 import time
 import webbrowser
 
+import requests
 import win32con
 import wx
 
@@ -336,8 +337,12 @@ class MainWindow(wx.Frame):
             img_name = str(clock_found.iloc[0]['图片'])
             self.img_ctrl.Show(True)
             img_adress = ('./resource/img/' + img_name + '.png')
-            img = wx.Image(img_adress, wx.BITMAP_TYPE_ANY).Scale(500, 500)
-            self.img_ctrl.SetBitmap(wx.Bitmap(img))
+            if not os.path.exists(img_adress): # 如果图片不存在则去在线源下载（用于更新版本的情况下）
+                from lib.web_service import online_img
+                online_img(img_name,self)
+            else:
+                img = wx.Image(img_adress, wx.BITMAP_TYPE_ANY).Scale(500, 500)
+                self.img_ctrl.SetBitmap(wx.Bitmap(img))
         self.out_listctrl_next.SetItemState(self.out_listctrl_next.GetFirstSelected(), 0, wx.LIST_STATE_SELECTED)
 
     # 点击下个时间段详情框事件

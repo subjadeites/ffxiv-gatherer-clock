@@ -89,3 +89,26 @@ def web_api_get(url, data=None, timeout=10):
             pass
 
     Thread(target=thread_func(), daemon=True).start()
+
+
+def online_img(img_name,frame):
+    def thread_func():
+        try:
+            try:
+                online_img = requests.get(f"https://ritualsong.works/subjadeites/ffxiv-gatherer-clock/raw/branch/master/resource/img/{img_name}.png", timeout=5).content
+                with open(rf"./resource/img/{img_name}.png", "wb") as f:
+                    f.write(online_img)
+            except:
+                online_img = requests.get(f"https://clock.ffxiv.wang/img/{img_name}.png", timeout=5).content
+                with open(rf"./resource/img/{img_name}.png", "wb") as f:
+                    f.write(online_img)
+            img_adress = ('./resource/img/' + img_name + '.png')
+            img = wx.Image(img_adress, wx.BITMAP_TYPE_ANY).Scale(500, 500)
+            frame.img_ctrl.SetBitmap(wx.Bitmap(img))
+        except:
+            img_adress = ('./resource/img/0.jpg')
+            img = wx.Image(img_adress, wx.BITMAP_TYPE_ANY).Scale(500, 500)
+            frame.img_ctrl.SetBitmap(wx.Bitmap(img))
+
+
+    Thread(target=thread_func(), daemon=True).start()
