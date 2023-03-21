@@ -4,6 +4,7 @@
 # @Author  : subjadeites
 # @File    : main.py
 import locale
+import os
 
 import wx
 from utils.my_wxpython import TransparentText
@@ -71,8 +72,15 @@ if __name__ == '__main__':
     from lib import public
 
     loading_windows = Loading_Windows(None, title="加载中")
+
+    if os.getenv("CLOCK_DEV") == "1":
+        is_dev = True
+    else:
+        is_dev = False
+    print(is_dev)
+
     # 热加载csv
-    get_clock = public.Get_Clock()
+    get_clock = public.Get_Clock(is_dev)
     get_clock.start()
 
     app.MainLoop()
