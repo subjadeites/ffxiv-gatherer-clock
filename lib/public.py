@@ -67,23 +67,34 @@ csv_cant_read = None
 
 # 导入采集时钟，强制使用网络版本
 class Get_Clock(Thread):
-    def __init__(self):
+    def __init__(self, is_dev: bool = False):
         super().__init__()
+        self.is_dev = is_dev
 
     def run(self):
-        try:
+        global csv_cant_read, clock  # 定义全局变量csv_cant_read，用于指示是否读取csv文件失败。
+        if not self.is_dev:
             try:
-                clock_csv = requests.get("https://ritualsong.works/subjadeites/ffxiv-gatherer-clock/raw/branch/master/resource/list.csv", timeout=5).content
-                with open("./resource/list.csv", "wb") as f:
-                    f.write(clock_csv)
+                try:
+                    clock_csv = requests.get("https://ritualsong.works/subjadeites/ffxiv-gatherer-clock/raw/branch/master/resource/list.csv", timeout=5).content
+                    with open("./resource/list.csv", "wb") as f:
+                        f.write(clock_csv)
+                except:
+                    clock_csv = requests.get("https://clock.ffxiv.wang/list", timeout=5).content
+                    with open("./resource/list.csv", "wb") as f:
+                        f.write(clock_csv)
             except:
-                clock_csv = requests.get("https://clock.ffxiv.wang/list", timeout=5).content
-                with open("./resource/list.csv", "wb") as f:
-                    f.write(clock_csv)
-        except:
-            wx.MessageDialog(None, "网络连接失败，无法获取在线采集时钟数据库，将加载本地时钟。", "在线数据库暂时无法使用", wx.OK | wx.ICON_ERROR).ShowModal()
-        finally:
-            global csv_cant_read, clock  # 定义全局变量csv_cant_read，用于指示是否读取csv文件失败。
+                wx.MessageDialog(None, "网络连接失败，无法获取在线采集时钟数据库，将加载本地时钟。", "在线数据库暂时无法使用", wx.OK | wx.ICON_ERROR).ShowModal()
+            finally:
+                try:
+                    clock = pd.read_csv("./resource/list.csv", encoding='UTF-8-sig')
+                    pd.set_option('display.max_rows', None)
+                    csv_cant_read = False
+                except BaseException:
+                    clock = None
+                    csv_cant_read = True
+
+        else:
             try:
                 clock = pd.read_csv("./resource/list.csv", encoding='UTF-8-sig')
                 pd.set_option('display.max_rows', None)
@@ -94,12 +105,12 @@ class Get_Clock(Thread):
 
 
 LingSha_list = ['精选白光灵砂', '精选大地灵砂', '精选大树灵砂', '精选丰饶灵砂', '精选古树灵砂', '精选黑暗灵砂', '精选黄昏灵砂', '精选极光灵砂', '精选巨树灵砂', '精选巨岩灵砂',
-                '精选雷鸣灵砂', '精选雷之晶簇', '精选闪光灵砂', '精选微光灵砂', '精选险山灵砂', '精选晓光灵砂', '精选晓月灵砂', '精选夜光灵砂', '精选悠久灵砂']
+                '精选雷鸣灵砂', '精选雷之晶簇', '精选闪光灵砂', '精选微光灵砂', '精选险山灵砂', '精选晓光灵砂', '精选晓月灵砂', '精选夜光灵砂', '精选悠久灵砂', '精选地鸣灵砂']
 JingZhi_list = []  # 精制魔晶石备用
 choose_dict = {
     -1: "",
     0: f"(clock['类型'] == '传说{now_patch_Legendary_star}星') & (clock['patch'] == 6.2)",
-    10: f"(clock['patch'] == 6.3)",
+    10: f"((clock['patch'] == 6.3) | (clock['patch'] == 6.2)) & (clock['材料名CN'] != '灰绿硅藻土') & (clock['类型'] != '高难精选')",
     1: " (clock['类型'] == '白票收藏品')",
     2: " (clock['类型'] == '紫票收藏品')",
     3: " clock.类型.isin(LingSha_list)",

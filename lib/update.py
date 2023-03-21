@@ -55,7 +55,7 @@ class Check_Update(Thread):
             else:
                 try:
                     try:
-                        url = 'https://ritualsong.works/subjadeites/ffxiv-gatherer-clock/raw/branch/master/version.json'
+                        url = 'https://ffxivclock.gamedatan.com/version'
                         response = requests.get(url, timeout=7, headers={'User-Agent': user_agent})
                         version_online_json = response.json()
                         version_online = version_online_json.get("Version")
@@ -63,7 +63,7 @@ class Check_Update(Thread):
                         version_online_as_tuple = tuple(int(x) for x in version_online.split('.'))
                         version_as_tuple = tuple(int(x) for x in version.split('.'))
                     except BaseException:
-                        url = 'https://ffxivclock.idataservice.com/version'
+                        url = 'https://ritualsong.works/subjadeites/ffxiv-gatherer-clock/raw/branch/master/version.json'
                         response = requests.get(url, timeout=7, headers={'User-Agent': user_agent})
                         version_online_json = response.json()
                         version_online = version_online_json.get("Version")

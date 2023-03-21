@@ -150,7 +150,7 @@ def clock_out(lang, Eorzea_time_in, need_tts, func, ZhiYe, lvl_min, lvl_max, cho
                 else:
                     nearby = '' if temp_i[5] == '暂无数据' else temp_i[5]
                     tts_word += f'{temp_i[0]}。{temp_i[2]}。{temp_i[3]}。{temp_i[4]}。{nearby}。'
-            if len(clock_found_next) > 0 and out_list != out_list_next and tts_word != "":
+            if tts_word != "" and len(clock_found_next) > 0 and out_list != out_list_next and tts_word != "":
                 tts_word = tts_word + "已为您更新下个时段预告" + "。"
             elif len(clock_found_next) == 0 and spk.Status.runningState == 1 and tts_word != "":
                 tts_word = tts_word + "下个时段无筛选条件下结果" + "。"

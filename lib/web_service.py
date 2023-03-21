@@ -33,11 +33,11 @@ def accept_online_msg():
         except BaseException:  # 请求在线热公告
             try:
                 try:
-                    url = 'https://ritualsong.works/subjadeites/ffxiv-gatherer-clock/raw/branch/master/msg.json'
+                    url = 'https://ffxivclock.idataservice.com/msg'
                     response = requests.get(url, timeout=10, headers={'User-Agent': user_agent})
                     online_msg_json = response.json()
                 except BaseException:
-                    url = 'https://ffxivclock.idataservice.com/msg'
+                    url = 'https://ritualsong.works/subjadeites/ffxiv-gatherer-clock/raw/branch/master/msg.json'
                     response = requests.get(url, timeout=10, headers={'User-Agent': user_agent})
                     online_msg_json = response.json()
             except BaseException:
