@@ -2,7 +2,7 @@
 
 基于Python3.9.5的本地时限采集时钟  
 代码理论兼容Python3.8.x  
-依赖：pandas pypiwin32 terminaltables httpx wxpython aiofiles等（详见 requirements.txt ）  
+依赖：pandas pypiwin32 terminaltables requests wxpython等（详见 requirements.txt ）  
 封装使用：auto-py-to-exe  
 基于GPL v3协议开源
 

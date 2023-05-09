@@ -7,6 +7,4 @@ colorama~=0.4.4
 auto-py-to-exe==2.18.0
 pyinstaller==4.10
 ntplib
-httpx
-aiofiles
 urllib3==1.25.11
