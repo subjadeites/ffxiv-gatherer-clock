@@ -183,12 +183,12 @@ def trans_top_windows_data(out_list: list, out_list_next: list, choose_lang: str
     :param out_list: clock_out()中得出的当前时间段的时限输出
     :param out_list_next: clock_out()中得出的下个时间段的时限输出
     """
-    now_list = [["职能", "道具名", "接近水晶", "地区"]]
-    next_list = [["职能", "道具名", "接近水晶", "地区"]]
+    now_list = [("职能", "道具名", "接近水晶", "地区","ET区间")]
+    next_list = []
     for i in range(0, len(out_list)):
-        now_list.append([out_list[i][2], out_list[i][0], out_list[i][5], out_list[i][4]])
+        now_list.append((out_list[i][2], out_list[i][0], out_list[i][5], out_list[i][4],f"{out_list[i][6]}-{out_list[i][7]}"))
     for i in range(0, len(out_list_next)):
-        next_list.append([out_list_next[i][2], out_list_next[i][0], out_list_next[i][5], out_list_next[i][4]])
+        next_list.append((out_list_next[i][2], out_list_next[i][0], out_list_next[i][5], out_list_next[i][4],f"{out_list_next[i][6]}-{out_list_next[i][7]}"))
     if choose_lang != "CN":
         top_windows_size = (570, 350)
     else:

@@ -77,7 +77,6 @@ if __name__ == '__main__':
         is_dev = True
     else:
         is_dev = False
-    print(is_dev)
 
     # 热加载csv
     get_clock = public.Get_Clock(is_dev)

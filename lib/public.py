@@ -21,7 +21,7 @@ config_size = (365, 500)
 top_windows_size = (480, 350)
 
 # 版本差异设定
-cn_not_have_version = 6.3
+cn_not_have_version = 6.4
 now_patch_Legendary_star = 2
 
 Eorzea_time_start = "{:02d}：{:02d}".format(
@@ -109,17 +109,16 @@ LingSha_list = ['精选白光灵砂', '精选大地灵砂', '精选大树灵砂'
 JingZhi_list = []  # 精制魔晶石备用
 choose_dict = {
     -1: "",
-    0: f"(clock['类型'] == '传说{now_patch_Legendary_star}星') & (clock['patch'] == 6.2)",
-    10: f"((clock['patch'] == 6.3) | (clock['patch'] == 6.2)) & (clock['材料名CN'] != '灰绿硅藻土') & (clock['类型'] != '高难精选')",
+    0: f"(clock['类型'] == '传说2星') & (clock['patch'] == 6.2)", # 610HQ
+    10: f"((clock['patch'] == 6.3) | (clock['patch'] == 6.2)) & (clock['材料名CN'] != '灰绿硅藻土') & (clock['类型'] != '高难精选')", # 生产620HQ
     1: " (clock['类型'] == '白票收藏品')",
     2: " (clock['类型'] == '紫票收藏品')",
     3: " clock.类型.isin(LingSha_list)",
     4: " (clock['类型'].str.contains('传说'))",
-    5: " (clock['类型'] == '传说1星')",  # "(clock.材料名JP.isin(JingZhi_list)
+    5: " (clock['类型'] == '传说2星')",  # "(clock.材料名JP.isin(JingZhi_list)
     6: " (clock['类型'] == '水晶')",
     7: " (clock['类型'] == '晶簇')",
     8: " (clock['类型'] == '高难精选')",
-
 }
 
 choose_ZhiYe_dict = {

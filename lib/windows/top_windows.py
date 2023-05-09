@@ -52,8 +52,12 @@ class Top_Windows(wx.Frame):
         :param next_list: list 下一个时间段结果 【暂时不用】
         :param top_windows_size: tuple 当前悬浮窗大小
         """
-        now_text = AsciiTable(now_list).table
-        self.now_text.SetLabel(now_text)
+        if len(now_list) < 6:
+            all_list = [*now_list,("***","***","***","***","***") ,*next_list]
+        else:
+            all_list = now_list
+        all_text = AsciiTable(all_list).table
+        self.now_text.SetLabel(all_text)
         self.close_button.SetPosition((top_windows_size[0] - 100, top_windows_size[1] - 80))
 
     # 改变窗口大小事件
