@@ -103,12 +103,15 @@ class MainWindow(wx.Frame):
         self.choose_func_5 = wx.CheckBox(self.main_frame, 95, "传说：精制魔晶石", pos=(555, self.line_pos[3]))
         self.choose_func_6 = wx.CheckBox(self.main_frame, 96, "水晶", pos=(675, self.line_pos[3]))
         self.choose_func_7 = wx.CheckBox(self.main_frame, 97, "晶簇", pos=(725, self.line_pos[3]))
-        self.choose_func_0 = wx.CheckBox(self.main_frame, 90, "[6.2]610HQ材料", pos=(225, self.line_pos[4]))
-        self.choose_func_01 = wx.CheckBox(self.main_frame, 901, "[6.3]生产采集绿装材料", pos=(345, self.line_pos[4]))
+        self.choose_func_62 = wx.CheckBox(self.main_frame, 90, "[6.2]610HQ材料", pos=(485, self.line_pos[4]))
+        self.choose_func_63 = wx.CheckBox(self.main_frame, 901, "[6.3]生产采集绿装材料", pos=(340, self.line_pos[4]))
+        self.choose_func_64 = wx.CheckBox(self.main_frame, 964, "[6.4]640HQ材料", pos=(225, self.line_pos[4]))
         self.now_patch_font = wx.Font(9, 74, 90, 700, False, 'Microsoft YaHei UI', 28)
-        self.now_patch_font1 = wx.Font(9, 74, 90, 700, False, 'Microsoft YaHei UI', 28)
-        self.choose_func_0.SetFont(self.now_patch_font)
-        self.choose_func_01.SetFont(self.now_patch_font1)
+        self.choose_func_63.SetFont(self.now_patch_font)
+        self.choose_func_64.SetFont(self.now_patch_font)
+        self.choose_func_63.SetForegroundColour((255, 0, 0, 255))
+        self.choose_func_64.SetForegroundColour((255, 0, 0, 255))
+        # 绑定自动重设等级事件
         self.Bind(wx.EVT_CHECKBOX, self.choose_func_auto_write, self.choose_func_5)
         self.Bind(wx.EVT_CHECKBOX, self.choose_func_auto_write, self.choose_func_6)
         self.Bind(wx.EVT_CHECKBOX, self.choose_func_auto_write, self.choose_func_7)
@@ -165,10 +168,6 @@ class MainWindow(wx.Frame):
         self.img_ctrl.Show(False)
         self.Centre()
         self.Bind(wx.EVT_CLOSE, self.OnExit)
-
-        # 设置强调字体颜色
-        self.choose_func_0.SetForegroundColour((255, 0, 0, 255))
-        self.choose_func_01.SetForegroundColour((255, 0, 0, 255))
 
         # 管理员权限自动校准时钟
         self.admin_auto_Ntp(self)
@@ -240,10 +239,10 @@ class MainWindow(wx.Frame):
                 choose_func_result[6] = self.choose_func_6.IsChecked()  # 检测水晶是否勾选
                 choose_func_result[7] = self.choose_func_7.IsChecked()  # 检测晶簇是否勾选
                 choose_func_result[8] = self.choose_func_8.IsChecked()  # 检测高难精炼是否勾选
-                choose_func_result[0] = self.choose_func_0.IsChecked()  # 检测当前patch是否勾选
-                choose_func_result[10] = self.choose_func_01.IsChecked()  # 检测当前patch生产采集是否勾选
-                choose_DLC_result = ['晓月', '全部', '漆黑', '红莲', '苍天', '新生'][
-                    self.choose_DLC.GetSelection()]  # 简单筛选DLC版本
+                choose_func_result[62] = self.choose_func_62.IsChecked()  # 检测610hq快捷是否勾选
+                choose_func_result[63] = self.choose_func_63.IsChecked()  # 检测620hq快捷是否勾选
+                choose_func_result[64] = self.choose_func_64.IsChecked()  # 检测640hq快捷是否勾选
+                choose_DLC_result = ['晓月', '全部', '漆黑', '红莲', '苍天', '新生'][self.choose_DLC.GetSelection()]  # 简单筛选DLC版本
             else:
                 choose_DLC_result = '自定义筛选'
             lvl_min_result = self.lvl_min.GetValue()
@@ -337,9 +336,9 @@ class MainWindow(wx.Frame):
             img_name = str(clock_found.iloc[0]['图片'])
             self.img_ctrl.Show(True)
             img_adress = ('./resource/img/' + img_name + '.png')
-            if not os.path.exists(img_adress): # 如果图片不存在则去在线源下载（用于更新版本的情况下）
+            if not os.path.exists(img_adress):  # 如果图片不存在则去在线源下载（用于更新版本的情况下）
                 from lib.web_service import online_img
-                online_img(img_name,self)
+                online_img(img_name, self)
             else:
                 img = wx.Image(img_adress, wx.BITMAP_TYPE_ANY).Scale(500, 500)
                 self.img_ctrl.SetBitmap(wx.Bitmap(img))
@@ -379,9 +378,21 @@ class MainWindow(wx.Frame):
         if self.choose_client.GetSelection() == 0:
             self.choose_lang.SetItemLabel(0, "日语JP")
             self.choose_lang.SetItemLabel(1, "英语EN")
+            # 设置套装选项
+            self.choose_func_62.SetPosition((485, self.line_pos[4]))
+            default_font = wx.SystemSettings.GetFont(wx.SYS_DEFAULT_GUI_FONT)
+            self.choose_func_62.SetFont(default_font)
+            self.choose_func_62.SetForegroundColour((0, 0, 0, 255))
+            self.choose_func_64.Show(True)
+
         else:
             self.choose_lang.SetItemLabel(0, "中文CN")
             self.choose_lang.SetItemLabel(1, "中文CN")
+            # 设置套装选项
+            self.choose_func_62.SetPosition((225, self.line_pos[4]))
+            self.choose_func_62.SetFont(self.now_patch_font)
+            self.choose_func_62.SetForegroundColour((255, 0, 0, 255))
+            self.choose_func_64.Show(False)
 
     # 使用音效相关选项读取
     def event_choose_sound(self, event):
