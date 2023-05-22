@@ -22,7 +22,7 @@ top_windows_size = (480, 350)
 
 # 版本差异设定
 cn_not_have_version = 6.4
-now_patch_Legendary_star = 2
+now_patch_Legendary_star = 3
 
 Eorzea_time_start = "{:02d}：{:02d}".format(
     int(datetime.datetime.utcfromtimestamp((time.time() * 1440 / 70) % 86400).strftime("%H")),
@@ -116,7 +116,7 @@ choose_dict = {
     2: " (clock['类型'] == '紫票收藏品')",
     3: " clock.类型.isin(LingSha_list)",
     4: " (clock['类型'].str.contains('传说'))",
-    5: " (clock['类型'] == '传说2星')",  # "(clock.材料名JP.isin(JingZhi_list)
+    5: " (clock['类型'] == '传说2星') | (clock['类型'] == '传说3星')",  # "(clock.材料名JP.isin(JingZhi_list)
     6: " (clock['类型'] == '水晶')",
     7: " (clock['类型'] == '晶簇')",
     8: " (clock['类型'] == '高难精选')",
