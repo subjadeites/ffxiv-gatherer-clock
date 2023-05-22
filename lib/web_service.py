@@ -95,11 +95,11 @@ def online_img(img_name,frame):
     def thread_func():
         try:
             try:
-                online_img = requests.get(f"https://ritualsong.works/subjadeites/ffxiv-gatherer-clock/raw/branch/master/resource/img/{img_name}.png", timeout=5).content
+                online_img = requests.get(f"https://clock.ffxiv.wang/img/{img_name}.png", timeout=5).content
                 with open(rf"./resource/img/{img_name}.png", "wb") as f:
                     f.write(online_img)
             except:
-                online_img = requests.get(f"https://clock.ffxiv.wang/img/{img_name}.png", timeout=5).content
+                online_img = requests.get(f"https://ritualsong.works/subjadeites/ffxiv-gatherer-clock/raw/branch/master/resource/img/{img_name}.png", timeout=5).content
                 with open(rf"./resource/img/{img_name}.png", "wb") as f:
                     f.write(online_img)
             img_adress = ('./resource/img/' + img_name + '.png')

@@ -9,7 +9,6 @@ import os
 import time
 import webbrowser
 
-import requests
 import win32con
 import wx
 
