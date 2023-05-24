@@ -110,7 +110,7 @@ choose_dict = {
     -1: "",
     62: f"(clock['类型'] == '传说2星') & (clock['patch'] == 6.2)",  # 610HQ
     63: f"((clock['patch'] == 6.3) | (clock['patch'] == 6.2)) & (clock['材料名CN'] != '灰绿硅藻土') & (clock['类型'] != '高难精选')",  # 生产620HQ
-    64: f"((clock['patch'] == 6.4) & (clock['类型'] != '高难精选')",  # 生产640HQ
+    64: f"(clock['patch'] == 6.4) & (clock['类型'] != '高难精选')",  # 生产640HQ
     1: " (clock['类型'] == '白票收藏品')",
     2: " (clock['类型'] == '紫票收藏品')",
     3: " clock.类型.isin(LingSha_list)",
