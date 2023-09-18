@@ -379,20 +379,21 @@ class MainWindow(wx.Frame):
             self.choose_lang.SetItemLabel(0, "日语JP")
             self.choose_lang.SetItemLabel(1, "英语EN")
             # 设置套装选项
-            self.choose_func_62.SetPosition((485, self.line_pos[4]))
-            default_font = wx.SystemSettings.GetFont(wx.SYS_DEFAULT_GUI_FONT)
-            self.choose_func_62.SetFont(default_font)
-            self.choose_func_62.SetForegroundColour((0, 0, 0, 255))
+            self.choose_func_62.Show(False)
             self.choose_func_64.Show(True)
 
         else:
             self.choose_lang.SetItemLabel(0, "中文CN")
             self.choose_lang.SetItemLabel(1, "中文CN")
             # 设置套装选项
-            self.choose_func_62.SetPosition((225, self.line_pos[4]))
-            self.choose_func_62.SetFont(self.now_patch_font)
-            self.choose_func_62.SetForegroundColour((255, 0, 0, 255))
-            self.choose_func_64.Show(False)
+            if time.time() > 1695096000:
+                self.choose_func_62.Show(False)
+                self.choose_func_64.Show(True)
+            else:
+                self.choose_func_62.SetPosition((225, self.line_pos[4]))
+                self.choose_func_62.SetFont(self.now_patch_font)
+                self.choose_func_62.SetForegroundColour((255, 0, 0, 255))
+                self.choose_func_64.Show(False)
 
     # 使用音效相关选项读取
     def event_choose_sound(self, event):

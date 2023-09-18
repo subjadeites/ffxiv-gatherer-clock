@@ -20,7 +20,7 @@ config_size = (365, 500)
 top_windows_size = (480, 350)
 
 # 版本差异设定
-cn_not_have_version = 6.4
+cn_not_have_version = 6.5 if time.time() > 1695096000 else 6.4
 now_patch_Legendary_star = 3
 
 Eorzea_time_start = "{:02d}：{:02d}".format(
