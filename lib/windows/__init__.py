@@ -3,6 +3,7 @@
 # @Time    : 2022/2/10 17:51
 # @Author  : subjadeites
 # @File    : __init__.py
+import pywinstyles
 
 from lib.windows.config_windows import *
 from lib.windows.main_windows import *
@@ -21,3 +22,9 @@ more_choose_windows.SetMinSize(more_choose_size)
 top_windows = Top_Windows(parent=frame, title="悬浮窗")
 # top_windows.SetMaxSize(top_windows_size) # 为了方便悬浮窗的使用，不设置最小尺寸
 # top_windows.SetMinSize(top_windows_size)# 为了方便悬浮窗的使用，不设置最大尺寸
+
+style = 'mica'
+pywinstyles.apply_style(frame, style)
+pywinstyles.apply_style(config_windows, style)
+pywinstyles.apply_style(more_choose_windows, style)
+pywinstyles.apply_style(top_windows, 'acrylic')
