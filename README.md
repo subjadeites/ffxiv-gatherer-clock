@@ -1,10 +1,14 @@
 # FFXIV-Gatherer-Clock
 
-基于Python3.9.5的本地时限采集时钟  
-代码理论兼容Python3.8.x  
-依赖：pandas pypiwin32 terminaltables requests wxpython等（详见 requirements.txt ）  
-封装使用：auto-py-to-exe  
-基于GPL v3协议开源
+基于Python3.12.2的本地时限采集时钟  
+基于`WxPython`构建GUI，代码理论兼容Python3.11.x  
+基于GPL v3协议开源  
+
+### 依赖与封装
+构建：`requirements_release.txt`  
+开发：`requirements.txt`  
+  
+封装：`auto-py-to-exe`(`pyinstaller==5.13.2`)，使用`upx==4.2.4`压缩
 
 ### 目前已实现功能</br>
 
