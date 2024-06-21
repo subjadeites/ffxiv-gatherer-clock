@@ -6,17 +6,14 @@
 import time
 from threading import Thread
 
-import pandas as pd
-
+from bin import csv_data
 from lib.config import configs
 from lib.public import choose_DLC_dict, choose_ZhiYe_dict, clock, func_select, Eorzea_time, LingSha_list, choose_dict, cn_not_have_version
 from utils.play_audio import PlayWav
 from utils.tts import tts, spk, custom_tts_parse
 
-# 临时初始化使用，避免自动格式化删除
+
 # TODO：闹钟方法优化
-LingSha_list = LingSha_list
-choose_dict = choose_dict
 
 
 # 闹钟核心方法
@@ -36,32 +33,33 @@ def clock_out(lang, Eorzea_time_in, need_tts, func, ZhiYe, lvl_min, lvl_max, cho
         else:
             next_start_time = Eorzea_time_in + 1
     if client_verion == "国服":
-        exclude_version = cn_not_have_version
+        exclude_version_select = [('!patch', cn_not_have_version)]
     else:
-        exclude_version = None
+        exclude_version_select = []
     # 筛选用字段准备
-    time_select = "(clock['开始ET'] <= Eorzea_time_in) & (clock['结束ET'] > Eorzea_time_in) & (clock['patch'] != exclude_version)"
-    time_select_next = "(clock['开始ET'] <= next_start_time) & (clock['结束ET'] > next_start_time) & (clock['patch'] != exclude_version)"
-    lvl_select = "& (clock['等级'] <= " + str(lvl_max) + ")" + "& (clock['等级'] >= " + str(lvl_min) + ")"
+    time_select = [('ET_time', Eorzea_time_in)]  # "(clock['开始ET'] <= Eorzea_time_in) & (clock['结束ET'] > Eorzea_time_in) & (clock['patch'] != exclude_version)"
+    time_select_next = [('ET_time', next_start_time)]  # "(clock['开始ET'] <= next_start_time) & (clock['结束ET'] > next_start_time) & (clock['patch'] != exclude_version)"
+    lvl_select = [('level', [lvl_min, lvl_max])]  # "& (clock['等级'] <= " + str(lvl_max) + ")" + "& (clock['等级'] >= " + str(lvl_min) + ")"
     DLC_select = choose_DLC_dict.get(choose_DLC)
     ZhiYe_select = choose_ZhiYe_dict.get(ZhiYe)
     # 筛选符合条件的时限
     if choose_DLC == '自定义筛选':
         out_list = []
-        select = time_select + '&clock.材料名' + lang + '.isin(more_select_result)'
-        clock_found = clock[eval(select)].sort_values(by='等级', ascending=False).head(None)
+        select = time_select + [('name', more_select_result)] + exclude_version_select
+        clock_found = csv_data.set_to_dict(csv_data.filter_data(clock, all_filter_dict=select))
         out_list_next = []
-        select_next = time_select_next + '&clock.材料名' + lang + '.isin(more_select_result)'
-        clock_found_next = clock[eval(select_next)].sort_values(by='等级', ascending=False).head(None)
+        select_next = time_select_next + [('name', more_select_result)] + exclude_version_select
+        clock_found_next = csv_data.set_to_dict(csv_data.filter_data(clock, all_filter_dict=select_next))
     else:  # DLC筛选模式
         out_list = []
-        select = time_select + func_select(func) + ZhiYe_select + lvl_select + DLC_select
-        clock_found = clock[eval(select)].sort_values(by='等级', ascending=False).head(None)
+        select = time_select + func_select(func, lang) + ZhiYe_select + lvl_select + DLC_select + exclude_version_select
+        clock_found = csv_data.set_to_dict(csv_data.filter_data(clock, all_filter_dict=select))
         # 这部分是用于预告下一次刷新的代码
         out_list_next = []
-        select_next = time_select_next + func_select(func) + ZhiYe_select + lvl_select + DLC_select
-        clock_found_next = clock[eval(select_next)].sort_values(by='等级', ascending=False).head(None)
-
+        select_next = time_select_next + func_select(func,lang) + ZhiYe_select + lvl_select + DLC_select + exclude_version_select
+        clock_found_next = csv_data.set_to_dict(csv_data.filter_data(clock, all_filter_dict=select_next))
+    print(select)
+    print(clock_found)
     old_out_list = []
     for i in range(0, frame.out_listctrl.GetItemCount()):
         old_out_list.append(frame.out_listctrl.GetItemText(i, 0))
@@ -76,54 +74,34 @@ def clock_out(lang, Eorzea_time_in, need_tts, func, ZhiYe, lvl_min, lvl_max, cho
         return next_start_time
     else:
         frame.img_ctrl.Show(False)  # 关闭图片窗体显示
-        place_keyword = '地区CN'  # i18n用
+        place_keyword = 'area_CN'  # i18n用
         for i in range(0, len(clock_found)):
-            temp_i_result = clock_found.iloc[i]
-            temp_out_list = [temp_i_result['材料名' + lang], str(int(temp_i_result['等级'])), temp_i_result['职能'],
-                             temp_i_result['类型'], temp_i_result[place_keyword], temp_i_result['靠近水晶'],
-                             str(temp_i_result['开始ET']), str(temp_i_result['结束ET'])]
+            temp_i_result = clock_found[i]
+            temp_out_list = [temp_i_result[f'material_{lang}'], str(int(temp_i_result['level'])), temp_i_result['job'],
+                             temp_i_result['type'], temp_i_result[place_keyword], temp_i_result['near_crystal'],
+                             str(temp_i_result['start_et']), str(temp_i_result['end_et'])]
             out_list.append(temp_out_list)
         # region 这部分是用于预告下一次刷新的代码
         for i in range(0, len(clock_found_next)):
-            temp_i_result = clock_found_next.iloc[i]
-            temp_out_list_2 = [temp_i_result['材料名' + lang], str(int(temp_i_result['等级'])), temp_i_result['职能'],
-                               temp_i_result['类型'], temp_i_result[place_keyword], temp_i_result['靠近水晶'],
-                               str(temp_i_result['开始ET']), str(temp_i_result['结束ET'])]
+            temp_i_result = clock_found_next[i]
+            temp_out_list_2 = [temp_i_result[f'material_{lang}'], str(int(temp_i_result['level'])), temp_i_result['job'],
+                             temp_i_result['type'], temp_i_result[place_keyword], temp_i_result['near_crystal'],
+                             str(temp_i_result['start_et']), str(temp_i_result['end_et'])]
             out_list_next.append(temp_out_list_2)
         # endregion
         # 格式化输出
         if len(clock_found) == 0:
             frame.out_listctrl.InsertItem(0, '当前时段无筛选条件下结果！')
-            i = 0
-            for v in out_list_next:
-                index = frame.out_listctrl_next.InsertItem(i, v[0])
-                for num_i in range(1, 8):
-                    if pd.isnull(v[num_i]) and num_i == 5:
-                        v[num_i] = ""
-                    elif pd.isnull(v[num_i]):
-                        v[num_i] = "暂无数据"
-                    frame.out_listctrl_next.SetItem(index, num_i, v[num_i])
-                i += 1
         elif len(clock_found_next) == 0:
-            i = 0
-            for v in out_list:
-                index = frame.out_listctrl.InsertItem(i, v[0])
-                for num_i in range(1, 8):
-                    if pd.isnull(v[num_i]) and num_i == 5:
-                        v[num_i] = ""
-                    elif pd.isnull(v[num_i]):
-                        v[num_i] = "暂无数据"
-                    frame.out_listctrl.SetItem(index, num_i, v[num_i])
-                i += 1
             frame.out_listctrl_next.InsertItem(0, '当前时段无筛选条件下结果！')
         else:
             i = 0
             for v in out_list:
                 index = frame.out_listctrl.InsertItem(i, v[0])
                 for num_i in range(1, 8):
-                    if pd.isnull(v[num_i]) and num_i == 5:
+                    if v[num_i] is None and num_i == 5:
                         v[num_i] = ""
-                    elif pd.isnull(v[num_i]):
+                    elif v[num_i] is None:
                         v[num_i] = "暂无数据"
                     frame.out_listctrl.SetItem(index, num_i, v[num_i])
                 i += 1
@@ -131,9 +109,9 @@ def clock_out(lang, Eorzea_time_in, need_tts, func, ZhiYe, lvl_min, lvl_max, cho
             for v in out_list_next:
                 index = frame.out_listctrl_next.InsertItem(i, v[0])
                 for num_i in range(1, 8):
-                    if pd.isnull(v[num_i]) and num_i == 5:
+                    if v[num_i] is None and num_i == 5:
                         v[num_i] = ""
-                    elif pd.isnull(v[num_i]):
+                    elif v[num_i] is None:
                         v[num_i] = "暂无数据"
                     frame.out_listctrl_next.SetItem(index, num_i, v[num_i])
                 i += 1
@@ -183,12 +161,12 @@ def trans_top_windows_data(out_list: list, out_list_next: list, choose_lang: str
     :param out_list: clock_out()中得出的当前时间段的时限输出
     :param out_list_next: clock_out()中得出的下个时间段的时限输出
     """
-    now_list = [("职能", "道具名", "接近水晶", "地区","ET区间")]
+    now_list = [("职能", "道具名", "接近水晶", "地区", "ET区间")]
     next_list = []
     for i in range(0, len(out_list)):
-        now_list.append((out_list[i][2], out_list[i][0], out_list[i][5], out_list[i][4],f"{out_list[i][6]}-{out_list[i][7]}"))
+        now_list.append((out_list[i][2], out_list[i][0], out_list[i][5], out_list[i][4], f"{out_list[i][6]}-{out_list[i][7]}"))
     for i in range(0, len(out_list_next)):
-        next_list.append((out_list_next[i][2], out_list_next[i][0], out_list_next[i][5], out_list_next[i][4],f"{out_list_next[i][6]}-{out_list_next[i][7]}"))
+        next_list.append((out_list_next[i][2], out_list_next[i][0], out_list_next[i][5], out_list_next[i][4], f"{out_list_next[i][6]}-{out_list_next[i][7]}"))
     if choose_lang != "CN":
         top_windows_size = (570, 350)
     else:

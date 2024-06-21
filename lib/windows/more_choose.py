@@ -6,10 +6,9 @@
 import copy
 import json
 
-import pandas as pd
 import wx
 import wx.lib.buttons as lib_btn
-
+from bin import csv_data
 from lib.public import more_choose_size, main_icon, clock
 
 
@@ -18,6 +17,7 @@ class More_Choose_Windows(wx.Frame):
         super().__init__(parent=parent, title=title, size=more_choose_size,
                          style=wx.CAPTION | wx.FRAME_FLOAT_ON_PARENT)  # 继承wx.Frame类
         self.main_frame = wx.Panel(self)
+        self.parent = parent
         # 设置图标
         self.SetIcon(main_icon)
         # 初始化从主窗口传入的参数
@@ -29,12 +29,22 @@ class More_Choose_Windows(wx.Frame):
         load_GUI_size = []
         load_pos_Y = []
         # 初始化序列
+        # self.select_dict = {
+        #     '黄金': clock.loc[(clock.版本归属 == '黄金'), ['材料名' + self.lang]],
+        #     '晓月': clock.loc[(clock.版本归属 == '晓月'), ['材料名' + self.lang]],
+        #     '漆黑': clock.loc[(clock.版本归属 == '漆黑'), ['材料名' + self.lang]],
+        #     '红莲': clock.loc[(clock.版本归属 == '红莲'), ['材料名' + self.lang]],
+        #     '苍天': clock.loc[(clock.版本归属 == '苍天'), ['材料名' + self.lang]],
+        #     '新生': clock.loc[(clock.版本归属 == '新生'), ['材料名' + self.lang]],
+        # }
+
         self.select_dict = {
-            '晓月': clock.loc[(clock.版本归属 == '晓月'), ['材料名' + self.lang]],
-            '漆黑': clock.loc[(clock.版本归属 == '漆黑'), ['材料名' + self.lang]],
-            '红莲': clock.loc[(clock.版本归属 == '红莲'), ['材料名' + self.lang]],
-            '苍天': clock.loc[(clock.版本归属 == '苍天'), ['材料名' + self.lang]],
-            '新生': clock.loc[(clock.版本归属 == '新生'), ['材料名' + self.lang]],
+            '黄金': csv_data.set_to_dict(csv_data.filter_data(clock, all_filter_dict=[('version', '黄金')])),
+            '晓月': csv_data.set_to_dict(csv_data.filter_data(clock, all_filter_dict=[('version', '晓月')])),
+            '漆黑': csv_data.set_to_dict(csv_data.filter_data(clock, all_filter_dict=[('version', '漆黑')])),
+            '红莲': csv_data.set_to_dict(csv_data.filter_data(clock, all_filter_dict=[('version', '红莲')])),
+            '苍天': csv_data.set_to_dict(csv_data.filter_data(clock, all_filter_dict=[('version', '苍天')])),
+            '新生': csv_data.set_to_dict(csv_data.filter_data(clock, all_filter_dict=[('version', '新生')])),
         }
         # TODO:支持跨语言转移存档
         self.cn = {}
@@ -45,38 +55,32 @@ class More_Choose_Windows(wx.Frame):
         self.Bind(wx.EVT_RADIOBUTTON, self.event_choose_way, self.choose_way_1)
         self.choose_way_2 = wx.RadioButton(self.main_frame, pos=(80, pos_Y[0]), name='radioButton2', label='手动选择版本')
         self.Bind(wx.EVT_RADIOBUTTON, self.event_choose_way, self.choose_way_2)
-        self.choose_DLC_1 = wx.CheckBox(self.main_frame, pos=(55, pos_Y[1]), name='check', label='晓月')
-        self.Bind(wx.EVT_CHECKBOX, self.event_choose_DLC, self.choose_DLC_1)
-        self.choose_DLC_2 = wx.CheckBox(self.main_frame, pos=(105, pos_Y[1]), name='check', label='漆黑')
-        self.Bind(wx.EVT_CHECKBOX, self.event_choose_DLC, self.choose_DLC_2)
-        self.choose_DLC_3 = wx.CheckBox(self.main_frame, pos=(155, pos_Y[1]), name='check', label='红莲')
-        self.Bind(wx.EVT_CHECKBOX, self.event_choose_DLC, self.choose_DLC_3)
-        self.choose_DLC_4 = wx.CheckBox(self.main_frame, pos=(205, pos_Y[1]), name='check', label='苍天')
-        self.Bind(wx.EVT_CHECKBOX, self.event_choose_DLC, self.choose_DLC_4)
-        self.choose_DLC_5 = wx.CheckBox(self.main_frame, pos=(255, pos_Y[1]), name='check', label='新生')
-        self.Bind(wx.EVT_CHECKBOX, self.event_choose_DLC, self.choose_DLC_5)
-        self.search_input = wx.TextCtrl(self.main_frame, size=(250, 25), pos=(50, pos_Y[5]), value='', name='text',
-                                        style=0)
+        self.choose_DLC_70 = wx.CheckBox(self.main_frame, pos=(55, pos_Y[1]), name='check', label='黄金')
+        self.Bind(wx.EVT_CHECKBOX, self.event_choose_DLC, self.choose_DLC_70)
+        self.choose_DLC_60 = wx.CheckBox(self.main_frame, pos=(105, pos_Y[1]), name='check', label='晓月')
+        self.Bind(wx.EVT_CHECKBOX, self.event_choose_DLC, self.choose_DLC_60)
+        self.choose_DLC_50 = wx.CheckBox(self.main_frame, pos=(155, pos_Y[1]), name='check', label='漆黑')
+        self.Bind(wx.EVT_CHECKBOX, self.event_choose_DLC, self.choose_DLC_50)
+        self.choose_DLC_40 = wx.CheckBox(self.main_frame, pos=(205, pos_Y[1]), name='check', label='红莲')
+        self.Bind(wx.EVT_CHECKBOX, self.event_choose_DLC, self.choose_DLC_40)
+        self.choose_DLC_30 = wx.CheckBox(self.main_frame, pos=(255, pos_Y[1]), name='check', label='苍天')
+        self.Bind(wx.EVT_CHECKBOX, self.event_choose_DLC, self.choose_DLC_30)
+        self.choose_DLC_20 = wx.CheckBox(self.main_frame, pos=(305, pos_Y[1]), name='check', label='新生')
+        self.Bind(wx.EVT_CHECKBOX, self.event_choose_DLC, self.choose_DLC_20)
+        self.search_input = wx.TextCtrl(self.main_frame, size=(250, 25), pos=(50, pos_Y[5]), value='', name='text', style=0)
         self.search_input.Bind(wx.EVT_TEXT, self.event_search_input)
-        self.choose_items = wx.CheckListBox(self.main_frame, size=GUI_size[1], pos=(50, pos_Y[2]), name='listBox',
-                                            choices=[], style=0)
+        self.choose_items = wx.CheckListBox(self.main_frame, size=GUI_size[1], pos=(50, pos_Y[2]), name='listBox', choices=[], style=0)
 
         wx.StaticText(self.main_frame, label='小知识：按顺序点击【全选】→【反选】即可清空所有选择', pos=(15, pos_Y[6]))
-        self.select_reverse = lib_btn.ThemedGenBitmapTextButton(self.main_frame, size=GUI_size[2], pos=(75, pos_Y[3]),
-                                                                bitmap=None, label='反选', name='select_reverse')
+        self.select_reverse = lib_btn.ThemedGenBitmapTextButton(self.main_frame, size=GUI_size[2], pos=(75, pos_Y[3]), bitmap=None, label='反选', name='select_reverse')
         self.Bind(wx.EVT_BUTTON, self.event_select_reverse, self.select_reverse)
-        self.select_all = lib_btn.ThemedGenBitmapTextButton(self.main_frame, size=GUI_size[2], pos=(185, pos_Y[3]),
-                                                            bitmap=None, label='全选', name='select_all')
+        self.select_all = lib_btn.ThemedGenBitmapTextButton(self.main_frame, size=GUI_size[2], pos=(185, pos_Y[3]), bitmap=None, label='全选', name='select_all')
         self.Bind(wx.EVT_BUTTON, self.event_select_all, self.select_all)
-        self.confirm = lib_btn.ThemedGenBitmapTextButton(self.main_frame, size=GUI_size[3], pos=(75, pos_Y[4]),
-                                                         bitmap=None, label='确定', name='confirm')
+        self.confirm = lib_btn.ThemedGenBitmapTextButton(self.main_frame, size=GUI_size[3], pos=(75, pos_Y[4]), bitmap=None, label='确定', name='confirm')
         self.Bind(wx.EVT_BUTTON, self.event_confirm, self.confirm)
-
-        self.load = lib_btn.ThemedGenBitmapTextButton(self.main_frame, size=(140, 35), pos=(330, 50),
-                                                      bitmap=None, label='导入自定义筛选模板', name='load')
+        self.load = lib_btn.ThemedGenBitmapTextButton(self.main_frame, size=(140, 35), pos=(330, 50), bitmap=None, label='导入自定义筛选模板', name='load')
         self.Bind(wx.EVT_BUTTON, self.event_load, self.load)
-        self.save = lib_btn.ThemedGenBitmapTextButton(self.main_frame, size=(140, 35), pos=(330, 100),
-                                                      bitmap=None, label='保存为自定义筛选模板', name='save')
+        self.save = lib_btn.ThemedGenBitmapTextButton(self.main_frame, size=(140, 35), pos=(330, 100), bitmap=None, label='保存为自定义筛选模板', name='save')
         self.Bind(wx.EVT_BUTTON, self.event_save, self.save)
         self.Bind(wx.EVT_CLOSE, self.OnClose)
         self.Centre()
@@ -84,53 +88,61 @@ class More_Choose_Windows(wx.Frame):
     def event_choose_way(self, event):
         user_choose = event.GetEventObject().GetLabel()
         if user_choose == "手动选择版本":
-            self.choose_DLC_1.SetValue(False)
-            self.choose_DLC_2.SetValue(False)
-            self.choose_DLC_3.SetValue(False)
-            self.choose_DLC_4.SetValue(False)
-            self.choose_DLC_5.SetValue(False)
-            self.choose_DLC_1.Enable()
-            self.choose_DLC_2.Enable()
-            self.choose_DLC_3.Enable()
-            self.choose_DLC_4.Enable()
-            self.choose_DLC_5.Enable()
+            self.choose_DLC_70.SetValue(False)
+            self.choose_DLC_60.SetValue(False)
+            self.choose_DLC_50.SetValue(False)
+            self.choose_DLC_40.SetValue(False)
+            self.choose_DLC_30.SetValue(False)
+            self.choose_DLC_20.SetValue(False)
+            self.choose_DLC_70.Enable()
+            self.choose_DLC_60.Enable()
+            self.choose_DLC_50.Enable()
+            self.choose_DLC_40.Enable()
+            self.choose_DLC_30.Enable()
+            self.choose_DLC_20.Enable()
             self.change_choose_items_list([])
         elif user_choose == "全选版本":
-            self.choose_DLC_1.SetValue(True)
-            self.choose_DLC_2.SetValue(True)
-            self.choose_DLC_3.SetValue(True)
-            self.choose_DLC_4.SetValue(True)
-            self.choose_DLC_5.SetValue(True)
-            self.choose_DLC_1.Disable()
-            self.choose_DLC_2.Disable()
-            self.choose_DLC_3.Disable()
-            self.choose_DLC_4.Disable()
-            self.choose_DLC_5.Disable()
+            self.choose_DLC_70.SetValue(True)
+            self.choose_DLC_60.SetValue(True)
+            self.choose_DLC_50.SetValue(True)
+            self.choose_DLC_40.SetValue(True)
+            self.choose_DLC_30.SetValue(True)
+            self.choose_DLC_20.SetValue(True)
+            self.choose_DLC_70.Disable()
+            self.choose_DLC_60.Disable()
+            self.choose_DLC_50.Disable()
+            self.choose_DLC_40.Disable()
+            self.choose_DLC_30.Disable()
+            self.choose_DLC_20.Disable()
             self.event_choose_DLC(None)
             self.default_items_list = self.choose_items.GetStrings()
 
     def event_choose_DLC(self, event):
         choose_item_list = []
-        if self.choose_DLC_1.GetValue() is True:
+        if self.choose_DLC_70.GetValue() is True:
+            temp_items_list = self.select_dict.get('黄金')
+            for i in temp_items_list:
+                choose_item_list.append(i[f'material_{self.lang}'])
+        if self.choose_DLC_60.GetValue() is True:
             temp_items_list = self.select_dict.get('晓月')
-            for i in range(0, len(temp_items_list)):
-                choose_item_list.append(temp_items_list.iloc[i]['材料名' + self.lang])
-        if self.choose_DLC_2.GetValue() is True:
+            for i in temp_items_list:
+                choose_item_list.append(i[f'material_{self.lang}'])
+        if self.choose_DLC_50.GetValue() is True:
             temp_items_list = self.select_dict.get('漆黑')
-            for i in range(0, len(temp_items_list)):
-                choose_item_list.append(temp_items_list.iloc[i]['材料名' + self.lang])
-        if self.choose_DLC_3.GetValue() is True:
+            for i in temp_items_list:
+                choose_item_list.append(i[f'material_{self.lang}'])
+        if self.choose_DLC_40.GetValue() is True:
             temp_items_list = self.select_dict.get('红莲')
-            for i in range(0, len(temp_items_list)):
-                choose_item_list.append(temp_items_list.iloc[i]['材料名' + self.lang])
-        if self.choose_DLC_4.GetValue() is True:
+            for i in temp_items_list:
+                choose_item_list.append(i[f'material_{self.lang}'])
+        if self.choose_DLC_30.GetValue() is True:
             temp_items_list = self.select_dict.get('苍天')
-            for i in range(0, len(temp_items_list)):
-                choose_item_list.append(temp_items_list.iloc[i]['材料名' + self.lang])
-        if self.choose_DLC_5.GetValue() is True:
+            for i in temp_items_list:
+                choose_item_list.append(i[f'material_{self.lang}'])
+        if self.choose_DLC_20.GetValue() is True:
             temp_items_list = self.select_dict.get('新生')
-            for i in range(0, len(temp_items_list)):
-                choose_item_list.append(temp_items_list.iloc[i]['材料名' + self.lang])
+            for i in temp_items_list:
+                choose_item_list.append(i[f'material_{self.lang}'])
         self.change_choose_items_list(choose_item_list, self.inherit)
 
     def change_choose_items_list(self, items_list: list, load_list: list = None):  # 修改选择列表
@@ -143,7 +155,7 @@ class More_Choose_Windows(wx.Frame):
         temp_result_list.extend(items_list)
         result_list = []
         for i in temp_result_list:
-            if pd.isnull(i):
+            if i is None:
                 pass
             elif i not in result_list:
                 result_list.append(i)
@@ -163,12 +175,9 @@ class More_Choose_Windows(wx.Frame):
         self.choose_items.SetCheckedItems(select_reverse_list)
 
     def event_confirm(self, event):  # 确定
-        from lib.windows import frame
         select_result = self.choose_items.GetCheckedStrings()
-        frame.transfer_data(select_result)
-        frame.transfer_button_more_select_shown(True)
-        frame.button_run.Enable()
-        self.Destroy()
+        self.parent.transfer_data(select_result)
+        self.OnClose(event)
 
     def event_load(self, event):
         load = wx.MessageDialog(None, "是否导入自定义筛选模板", "导入自定义筛选模板", wx.YES_NO | wx.ICON_INFORMATION)
@@ -182,20 +191,22 @@ class More_Choose_Windows(wx.Frame):
                     md.ShowModal()
                     md.Destroy()
                 else:
-                    self.choose_DLC_1.SetValue(False)
-                    self.choose_DLC_2.SetValue(False)
-                    self.choose_DLC_3.SetValue(False)
-                    self.choose_DLC_4.SetValue(False)
-                    self.choose_DLC_5.SetValue(False)
-                    self.choose_DLC_1.Enable()
-                    self.choose_DLC_2.Enable()
-                    self.choose_DLC_3.Enable()
-                    self.choose_DLC_4.Enable()
-                    self.choose_DLC_5.Enable()
+                    self.choose_DLC_70.SetValue(False)
+                    self.choose_DLC_60.SetValue(False)
+                    self.choose_DLC_50.SetValue(False)
+                    self.choose_DLC_40.SetValue(False)
+                    self.choose_DLC_30.SetValue(False)
+                    self.choose_DLC_20.SetValue(False)
+                    self.choose_DLC_70.Enable()
+                    self.choose_DLC_60.Enable()
+                    self.choose_DLC_50.Enable()
+                    self.choose_DLC_40.Enable()
+                    self.choose_DLC_30.Enable()
+                    self.choose_DLC_20.Enable()
                     self.choose_way_2.SetValue(True)
                     if self.lang == 'CN':
-                        self.choose_DLC_1.SetValue(False)
-                        self.choose_DLC_1.Disable()
+                        self.choose_DLC_70.SetValue(False)
+                        self.choose_DLC_70.Disable()
             except FileNotFoundError:
                 md = wx.MessageDialog(None, """未找到自定义筛选模板文件。\n请重新创建模板。""", "导入失败")  # 语法是(self, 内容, 标题, ID)
                 md.ShowModal()
@@ -245,10 +256,15 @@ class More_Choose_Windows(wx.Frame):
             self.change_choose_items_list(search_result_list, have_selected)
 
     def OnClose(self, event):
-        from lib.windows import frame
-        frame.transfer_button_more_select_shown(True)
-        frame.button_run.Enable()
+        self.parent.transfer_button_more_select_shown(True)
+        self.parent.button_run.Enable()
+        self.parent.Enable(True)
+        # frame.transfer_button_more_select_shown(True)
+        # frame.button_run.Enable()
         self.Destroy()
 
     def set_lang(self, lang: str):
         self.lang = lang
+
+    def set_inherit(self, inherit: list):
+        self.inherit = inherit
