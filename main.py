@@ -68,6 +68,12 @@ class Loading_Windows(wx.Frame):
 
 
 if __name__ == '__main__':
+    # 禁用系统代理
+    os.environ['http_proxy'] = ''
+    os.environ['https_proxy'] = ''
+    os.environ['HTTP_PROXY'] = ''
+    os.environ['HTTPS_PROXY'] = ''
+
     # 加载loading窗口
     from lib import public
 

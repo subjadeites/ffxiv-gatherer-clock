@@ -8,3 +8,4 @@ auto-py-to-exe==2.18.0
 pyinstaller==4.10
 ntplib
 urllib3==1.25.11
+cython==3.0.10

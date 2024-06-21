@@ -34,11 +34,11 @@ def accept_online_msg():
             try:
                 try:
                     url = 'https://ffxivclock.idataservice.com/msg'
-                    response = requests.get(url, timeout=10, headers={'User-Agent': user_agent})
+                    response = requests.get(url, timeout=10, headers={'User-Agent': user_agent}, proxies={"http": None, "https": None})
                     online_msg_json = response.json()
                 except BaseException:
                     url = 'https://ritualsong.works/subjadeites/ffxiv-gatherer-clock/raw/branch/master/msg.json'
-                    response = requests.get(url, timeout=10, headers={'User-Agent': user_agent})
+                    response = requests.get(url, timeout=10, headers={'User-Agent': user_agent}, proxies={"http": None, "https": None})
                     online_msg_json = response.json()
             except BaseException:
                 pass
@@ -84,22 +84,22 @@ def accept_online_msg():
 def web_api_get(url, data=None, timeout=10):
     def thread_func():
         try:
-            requests.get(url, data=data, timeout=timeout, headers={'referer': f'{version}'})
+            requests.get(url, data=data, timeout=timeout, headers={'referer': f'{version}'}, proxies={"http": None, "https": None})
         except BaseException:
             pass
 
     Thread(target=thread_func(), daemon=True).start()
 
 
-def online_img(img_name,frame):
+def online_img(img_name, frame):
     def thread_func():
         try:
             try:
-                online_img = requests.get(f"https://clock.ffxiv.wang/img/{img_name}.png", timeout=5).content
+                online_img = requests.get(f"https://clock.ffxiv.wang/img/{img_name}.png", timeout=5, proxies={"http": None, "https": None}).content
                 with open(rf"./resource/img/{img_name}.png", "wb") as f:
                     f.write(online_img)
             except:
-                online_img = requests.get(f"https://ritualsong.works/subjadeites/ffxiv-gatherer-clock/raw/branch/master/resource/img/{img_name}.png", timeout=5).content
+                online_img = requests.get(f"https://ritualsong.works/subjadeites/ffxiv-gatherer-clock/raw/branch/master/resource/img/{img_name}.png", timeout=5, proxies={"http": None, "https": None}).content
                 with open(rf"./resource/img/{img_name}.png", "wb") as f:
                     f.write(online_img)
             img_adress = ('./resource/img/' + img_name + '.png')
@@ -109,6 +109,5 @@ def online_img(img_name,frame):
             img_adress = ('./resource/img/0.jpg')
             img = wx.Image(img_adress, wx.BITMAP_TYPE_ANY).Scale(500, 500)
             frame.img_ctrl.SetBitmap(wx.Bitmap(img))
-
 
     Thread(target=thread_func(), daemon=True).start()
