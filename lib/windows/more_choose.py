@@ -28,16 +28,6 @@ class More_Choose_Windows(wx.Frame):
         pos_Y = [10, 35, 90, 475, 515, 57, 455]
         load_GUI_size = []
         load_pos_Y = []
-        # 初始化序列
-        # self.select_dict = {
-        #     '黄金': clock.loc[(clock.版本归属 == '黄金'), ['材料名' + self.lang]],
-        #     '晓月': clock.loc[(clock.版本归属 == '晓月'), ['材料名' + self.lang]],
-        #     '漆黑': clock.loc[(clock.版本归属 == '漆黑'), ['材料名' + self.lang]],
-        #     '红莲': clock.loc[(clock.版本归属 == '红莲'), ['材料名' + self.lang]],
-        #     '苍天': clock.loc[(clock.版本归属 == '苍天'), ['材料名' + self.lang]],
-        #     '新生': clock.loc[(clock.版本归属 == '新生'), ['材料名' + self.lang]],
-        # }
-
         self.select_dict = {
             '黄金': csv_data.set_to_dict(csv_data.filter_data(clock, all_filter_dict=[('version', '黄金')])),
             '晓月': csv_data.set_to_dict(csv_data.filter_data(clock, all_filter_dict=[('version', '晓月')])),
@@ -259,8 +249,6 @@ class More_Choose_Windows(wx.Frame):
         self.parent.transfer_button_more_select_shown(True)
         self.parent.button_run.Enable()
         self.parent.Enable(True)
-        # frame.transfer_button_more_select_shown(True)
-        # frame.button_run.Enable()
         self.Destroy()
 
     def set_lang(self, lang: str):
