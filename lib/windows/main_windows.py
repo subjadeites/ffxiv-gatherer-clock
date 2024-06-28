@@ -96,7 +96,7 @@ class MainWindow(wx.Frame):
         self.Bind(wx.EVT_RADIOBOX, self.DLC_to_lvl, self.choose_DLC)
         # 设置时限点筛选多选框
         self.choose_func_text = wx.StaticText(self.main_frame, label='请选择需要提醒的采集点种类：', pos=(10, self.line_pos[3]))
-        self.choose_func_list = [
+        choose_func_list = [
             (1, '紫票收藏品', 180),
             (2, '橙票收藏品', 265),
             (3, '精选灵砂', 350),
@@ -107,20 +107,22 @@ class MainWindow(wx.Frame):
             (7, '晶簇', 725),
         ]
         self.choose_func_box_dict = {}
-        for i in self.choose_func_list:
+        for i in choose_func_list:
             check_box = wx.CheckBox(self.main_frame, -1, i[1], pos=(i[2], self.line_pos[3]))
             self.choose_func_box_dict[i[0]] = check_box
             # 包浆和水晶晶簇有限定等级，因此绑定事件
             if i[1] in ['传说：精制魔晶石', '水晶', '晶簇']:
                 self.Bind(wx.EVT_CHECKBOX, self.choose_func_auto_write, check_box)
-        # self.choose_func_62 = wx.CheckBox(self.main_frame, 90, "[6.2]610HQ材料", pos=(485, self.line_pos[4]))
-        # self.choose_func_63 = wx.CheckBox(self.main_frame, 901, "[6.3]生产采集绿装材料", pos=(340, self.line_pos[4]))
-        # self.choose_func_64 = wx.CheckBox(self.main_frame, 964, "[6.4]640HQ材料", pos=(225, self.line_pos[4]))
-        # self.now_patch_font = wx.Font(9, 74, 90, 700, False, 'Microsoft YaHei UI', 28)
-        # self.choose_func_63.SetFont(self.now_patch_font)
-        # self.choose_func_64.SetFont(self.now_patch_font)
-        # self.choose_func_63.SetForegroundColour((255, 0, 0, 255))
-        # self.choose_func_64.SetForegroundColour((255, 0, 0, 255))
+        choose_special_func_list = [
+            (63, '[6.3]生产采集绿装材料', 340, (255, 0, 0, 255)),
+            (64, '[6.4]640HQ材料', 225, (255, 0, 0, 255)),
+        ]
+        now_patch_font = wx.Font(9, 74, 90, 700, False, 'Microsoft YaHei UI', 28)
+        for i in choose_special_func_list:
+            check_box = wx.CheckBox(self.main_frame, -1, i[1], pos=(i[2], self.line_pos[4] + 1))
+            check_box.SetFont(now_patch_font)
+            check_box.SetForegroundColour(i[3])
+            self.choose_func_box_dict[i[0]] = check_box
         # 设置等级上下限输入框
         self.lvl_text = wx.StaticText(self.main_frame, label='请选择等级区间：', pos=(10, self.line_pos[4]))
         self.lvl_min = wx.SpinCtrl(self.main_frame, size=(45, 20), pos=(110, self.line_pos[4]), name='wxSpinCtrl', min=0, max=100, initial=90, style=0)
@@ -150,7 +152,6 @@ class MainWindow(wx.Frame):
             (5, '靠近水晶', 80),
             (6, '开始ET', 50),
             (7, '结束ET', 50)
-
         ]
         # 创建当前时段采集时钟控件
         self.out_listctrl = wx.ListCtrl(self.main_frame, 8888, style=wx.LC_REPORT, pos=(10, self.line_pos[7]), size=(770, -1))
@@ -194,6 +195,8 @@ class MainWindow(wx.Frame):
         # 无系统TTS时，允许在限制模式下使用时钟。
         if spk is None:
             self.choose_TTS.SetSelection(1)
+
+        self.event_choose_client(None)
 
     # 关于
     def OnAbout(self, event):
@@ -381,13 +384,16 @@ class MainWindow(wx.Frame):
             self.choose_lang.SetItemLabel(1, "英语EN")
             self.choose_DLC.Destroy()
             self.choose_DLC = wx.RadioBox(self.main_frame, -1, "选择版本", (10, self.line_pos[2]), wx.DefaultSize, ['黄金', '全部', '晓月', '漆黑', '红莲', '苍天', '新生'], 7, wx.RA_SPECIFY_COLS)
+            self.choose_func_box_dict[63].Show(False)
+            self.choose_func_box_dict[64].Show(False)
             self.Bind(wx.EVT_RADIOBOX, self.DLC_to_lvl, self.choose_DLC)
             self.DLC_to_lvl(event)
-
         else:
             self.choose_lang.SetItemLabel(0, "中文CN")
             self.choose_lang.SetItemLabel(1, "中文CN")
             self.choose_DLC.Destroy()
+            self.choose_func_box_dict[63].Show(True)
+            self.choose_func_box_dict[64].Show(True)
             self.choose_DLC = wx.RadioBox(self.main_frame, -1, "选择版本", (10, self.line_pos[2]), wx.DefaultSize, ['晓月', '全部', '漆黑', '红莲', '苍天', '新生'], 7, wx.RA_SPECIFY_COLS)
             self.Bind(wx.EVT_RADIOBOX, self.DLC_to_lvl, self.choose_DLC)
             self.DLC_to_lvl(event)
