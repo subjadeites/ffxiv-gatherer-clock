@@ -18,9 +18,11 @@ from threading import Thread
 import requests
 import win32api
 import win32con
+import yaml
+import wx
 
+from bin import csv_data
 from lib.update import user_agent, version
-from lib.windows import wx
 
 
 # 热公告支持
@@ -111,3 +113,94 @@ def online_img(img_name, frame):
             frame.img_ctrl.SetBitmap(wx.Bitmap(img))
 
     Thread(target=thread_func(), daemon=True).start()
+
+
+# 导入采集时钟，强制使用网络版本
+class Get_Clock(Thread):
+    def __init__(self, is_dev: bool = False):
+        super().__init__()
+        self.is_dev = is_dev
+
+    def run(self):
+        if not self.is_dev:
+            try:
+                try:
+                    clock_csv = requests.get("https://ritualsong.works/subjadeites/ffxiv-gatherer-clock/raw/branch/master/resource/list.csv", timeout=5, proxies={"http": None, "https": None}).content
+                    with open("./resource/list.csv", "wb") as f:
+                        f.write(clock_csv)
+                except:
+                    clock_csv = requests.get("https://clock.ffxiv.wang/list", timeout=5, proxies={"http": None, "https": None}).content
+                    with open("./resource/list.csv", "wb") as f:
+                        f.write(clock_csv)
+            except:
+                wx.MessageDialog(None, "网络连接失败，无法获取在线采集时钟数据库，将加载本地时钟。", "在线数据库暂时无法使用", wx.OK | wx.ICON_ERROR).ShowModal()
+            finally:
+                try:
+                    clock = csv_data.load_csv(r'./resource/list.csv'.encode('utf-8'))
+                    csv_cant_read = False
+                except BaseException:
+                    clock = None
+                    csv_cant_read = True
+                    clock_yaml = None
+
+        else:
+            try:
+                clock = csv_data.load_csv(r'./resource/list.csv'.encode('utf-8'))
+                csv_cant_read = False
+            except BaseException:
+                clock = None
+                csv_cant_read = True
+
+        from lib import public
+        public.clock = clock
+        public.csv_cant_read = csv_cant_read
+
+
+class Get_Clock_Yaml(Thread):
+    def __init__(self, is_dev: bool = False):
+        super().__init__()
+        self.is_dev = is_dev
+
+    def run(self):
+        if not self.is_dev:
+            try:
+                try:
+                    clock_yaml = requests.get("https://ritualsong.works/subjadeites/ffxiv-gatherer-clock/raw/branch/master/clock.yaml", timeout=5, proxies={"http": None, "https": None}).content
+                    with open('clock.yaml', 'wb', encoding='utf-8') as f:
+                        f.write(clock_yaml)
+
+                except:
+                    clock_yaml = requests.get("https://clock.ffxiv.wang/yaml", timeout=5, proxies={"http": None, "https": None}).content
+                    with open('clock.yaml', 'wb', encoding='utf-8') as f:
+                        f.write(clock_yaml)
+            except:
+                wx.MessageDialog(None, "网络连接失败，无法获取在线版本设置文件，将加载本地版本文件。", "在线版本设置暂时无法使用", wx.OK | wx.ICON_ERROR).ShowModal()
+            finally:
+                try:
+                    with open('clock.yaml', 'r', encoding='utf-8') as f:
+                        clock_yaml = yaml.safe_load(f)
+                        yaml_cant_read = False
+                except BaseException:
+                    yaml_cant_read = True
+                    clock_yaml = None
+
+        else:
+            try:
+                with open('clock.yaml', 'r', encoding='utf-8') as f:
+                    clock_yaml = yaml.safe_load(f)
+                    yaml_cant_read = False
+            except BaseException:
+                yaml_cant_read = True
+                clock_yaml = None
+
+        from lib import public
+        public.clock_yaml = clock_yaml
+        public.csv_cant_read = yaml_cant_read
+        clockyaml = public.ClockYaml(clock_yaml)
+        public.VERSION_DIFF_DICT = clockyaml.VERSION_DIFF_DICT
+        public.choose_dict = clockyaml.choose_dict
+        public.LingSha_list = clockyaml.LingSha_list
+        public.JingZhi_list = clockyaml.JingZhi_list
+        public.choose_ZhiYe_dict = clockyaml.choose_ZhiYe_dict
+        public.choose_DLC_dict = clockyaml.choose_DLC_dict
+        public.cn_not_have_version = clockyaml.cn_not_have_version

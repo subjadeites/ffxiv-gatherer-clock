@@ -74,18 +74,21 @@ if __name__ == '__main__':
     os.environ['HTTP_PROXY'] = ''
     os.environ['HTTPS_PROXY'] = ''
 
-    # 加载loading窗口
-    from lib import public
-
-    loading_windows = Loading_Windows(None, title="加载中")
-
     if os.getenv("CLOCK_DEV") == "1":
         is_dev = True
     else:
         is_dev = False
 
+    # 加载loading窗口
+    from lib import web_service
+
+    get_clock_yaml = web_service.Get_Clock_Yaml(is_dev)
+    get_clock_yaml.start()
+
+    loading_windows = Loading_Windows(None, title="加载中")
+
     # 热加载csv
-    get_clock = public.Get_Clock(is_dev)
+    get_clock = web_service.Get_Clock(is_dev)
     get_clock.start()
 
     app.MainLoop()
