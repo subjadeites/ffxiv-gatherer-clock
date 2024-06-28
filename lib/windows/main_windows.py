@@ -382,20 +382,28 @@ class MainWindow(wx.Frame):
         if self.choose_client.GetSelection() == 0:
             self.choose_lang.SetItemLabel(0, "日语JP")
             self.choose_lang.SetItemLabel(1, "英语EN")
+
             self.choose_DLC.Destroy()
             self.choose_DLC = wx.RadioBox(self.main_frame, -1, "选择版本", (10, self.line_pos[2]), wx.DefaultSize, ['黄金', '全部', '晓月', '漆黑', '红莲', '苍天', '新生'], 7, wx.RA_SPECIFY_COLS)
             self.choose_func_box_dict[63].Show(False)
             self.choose_func_box_dict[64].Show(False)
+            self.choose_func_box_dict[1].SetLabel("紫票收藏品")
+            self.choose_func_box_dict[2].SetLabel("橙票收藏品")
             self.Bind(wx.EVT_RADIOBOX, self.DLC_to_lvl, self.choose_DLC)
+
             self.DLC_to_lvl(event)
         else:
             self.choose_lang.SetItemLabel(0, "中文CN")
             self.choose_lang.SetItemLabel(1, "中文CN")
+
             self.choose_DLC.Destroy()
             self.choose_func_box_dict[63].Show(True)
             self.choose_func_box_dict[64].Show(True)
             self.choose_DLC = wx.RadioBox(self.main_frame, -1, "选择版本", (10, self.line_pos[2]), wx.DefaultSize, ['晓月', '全部', '漆黑', '红莲', '苍天', '新生'], 7, wx.RA_SPECIFY_COLS)
             self.Bind(wx.EVT_RADIOBOX, self.DLC_to_lvl, self.choose_DLC)
+            self.choose_func_box_dict[1].SetLabel("白票收藏品")
+            self.choose_func_box_dict[2].SetLabel("紫票收藏品")
+
             self.DLC_to_lvl(event)
 
     # 使用音效相关选项读取

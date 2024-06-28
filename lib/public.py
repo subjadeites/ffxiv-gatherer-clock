@@ -41,8 +41,12 @@ def func_select(func: list, lang: str) -> list[tuple]:
     else:
         result = []
         for k in func:
-            if k == 5 and lang == 'CN' and VERSION_DIFF_DICT['patch'] < 7.0:
+            if k == 5 and lang == 'CN' and cn_not_have_version == 7.0:
                 k = 5.1
+            if k == 1 and lang == 'CN' and cn_not_have_version == 7.0:
+                k = 61
+            if k == 2 and lang == 'CN' and cn_not_have_version == 7.0:
+                k = 62
             result += choose_dict.get(k)
         return result
 

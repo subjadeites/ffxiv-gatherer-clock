@@ -8,7 +8,7 @@ from threading import Thread
 
 from bin import csv_data
 from lib.config import configs
-from lib.public import choose_DLC_dict, choose_ZhiYe_dict, clock, func_select, Eorzea_time, LingSha_list, choose_dict, cn_not_have_version
+from lib.public import choose_DLC_dict, choose_ZhiYe_dict, clock, func_select, Eorzea_time, cn_not_have_version
 from utils.play_audio import PlayWav
 from utils.tts import tts, spk, custom_tts_parse
 
