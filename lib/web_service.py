@@ -166,18 +166,18 @@ class Get_Clock_Yaml(Thread):
             try:
                 try:
                     clock_yaml = requests.get("https://ritualsong.works/subjadeites/ffxiv-gatherer-clock/raw/branch/master/clock.yaml", timeout=5, proxies={"http": None, "https": None}).content
-                    with open('clock.yaml', 'wb', encoding='utf-8') as f:
+                    with open('clock.yaml', 'wb') as f:
                         f.write(clock_yaml)
 
                 except:
                     clock_yaml = requests.get("https://clock.ffxiv.wang/yaml", timeout=5, proxies={"http": None, "https": None}).content
-                    with open('clock.yaml', 'wb', encoding='utf-8') as f:
+                    with open('clock.yaml', 'wb') as f:
                         f.write(clock_yaml)
             except:
                 wx.MessageDialog(None, "网络连接失败，无法获取在线版本设置文件，将加载本地版本文件。", "在线版本设置暂时无法使用", wx.OK | wx.ICON_ERROR).ShowModal()
             finally:
                 try:
-                    with open('clock.yaml', 'r', encoding='utf-8') as f:
+                    with open('./clock.yaml', 'r', encoding='utf-8') as f:
                         clock_yaml = yaml.safe_load(f)
                         yaml_cant_read = False
                 except BaseException:
@@ -186,7 +186,7 @@ class Get_Clock_Yaml(Thread):
 
         else:
             try:
-                with open('clock.yaml', 'r', encoding='utf-8') as f:
+                with open('./clock.yaml', 'r', encoding='utf-8') as f:
                     clock_yaml = yaml.safe_load(f)
                     yaml_cant_read = False
             except BaseException:
