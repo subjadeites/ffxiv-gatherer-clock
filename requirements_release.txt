@@ -7,3 +7,4 @@ pyinstaller==5.13.2
 ntplib
 cython==3.0.10
 pywinstyles
+PyYaml
