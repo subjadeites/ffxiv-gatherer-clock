@@ -58,8 +58,6 @@ def clock_out(lang, Eorzea_time_in, need_tts, func, ZhiYe, lvl_min, lvl_max, cho
         out_list_next = []
         select_next = time_select_next + func_select(func,lang) + ZhiYe_select + lvl_select + DLC_select + exclude_version_select
         clock_found_next = csv_data.set_to_dict(csv_data.filter_data(clock, all_filter_dict=select_next))
-    print(select)
-    print(clock_found)
     old_out_list = []
     for i in range(0, frame.out_listctrl.GetItemCount()):
         old_out_list.append(frame.out_listctrl.GetItemText(i, 0))
@@ -74,7 +72,7 @@ def clock_out(lang, Eorzea_time_in, need_tts, func, ZhiYe, lvl_min, lvl_max, cho
         return next_start_time
     else:
         frame.img_ctrl.Show(False)  # 关闭图片窗体显示
-        place_keyword = 'area_CN'  # i18n用
+        place_keyword = 'area_EN' if lang == 'EN' else 'area_CN'  # i18n用
         for i in range(0, len(clock_found)):
             temp_i_result = clock_found[i]
             temp_out_list = [temp_i_result[f'material_{lang}'], str(int(temp_i_result['level'])), temp_i_result['job'],
