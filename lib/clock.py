@@ -22,7 +22,7 @@ def clock_out(lang, Eorzea_time_in, need_tts, func, ZhiYe, lvl_min, lvl_max, cho
               more_select_result, next_clock_time) -> int:
     from lib.windows import frame
     # 换日,兼容2.0里3个ET小时刷新的时限
-    if choose_DLC in ["漆黑", "晓月", "红莲", "苍天"]:
+    if choose_DLC in ["漆黑", "晓月", "红莲", "苍天", "黄金"]:
         if Eorzea_time_in == 22 or Eorzea_time_in == 23:
             next_start_time = 0
         else:
@@ -52,12 +52,28 @@ def clock_out(lang, Eorzea_time_in, need_tts, func, ZhiYe, lvl_min, lvl_max, cho
         clock_found_next = csv_data.set_to_dict(csv_data.filter_data(clock, all_filter_dict=select_next))
     else:  # DLC筛选模式
         out_list = []
-        select = time_select + func_select(func, lang) + ZhiYe_select + lvl_select + DLC_select + exclude_version_select
-        clock_found = csv_data.set_to_dict(csv_data.filter_data(clock, all_filter_dict=select))
+        clock_found = []
+        func_select_result = func_select(func, lang)
+        print(func_select_result)
+        if func_select_result == []:
+            select = time_select + ZhiYe_select + lvl_select + DLC_select + exclude_version_select
+            clock_found = csv_data.set_to_dict(csv_data.filter_data(clock, all_filter_dict=select))
+        else:
+            for i in func_select_result:
+                select = time_select + [i] + ZhiYe_select + lvl_select + DLC_select + exclude_version_select
+                clock_found = [*clock_found, *csv_data.set_to_dict(csv_data.filter_data(clock, all_filter_dict=select))]
         # 这部分是用于预告下一次刷新的代码
         out_list_next = []
-        select_next = time_select_next + func_select(func,lang) + ZhiYe_select + lvl_select + DLC_select + exclude_version_select
-        clock_found_next = csv_data.set_to_dict(csv_data.filter_data(clock, all_filter_dict=select_next))
+        clock_found_next = []
+        if func_select_result == []:
+            select_next = time_select_next + ZhiYe_select + lvl_select + DLC_select + exclude_version_select
+            clock_found_next = csv_data.set_to_dict(csv_data.filter_data(clock, all_filter_dict=select_next))
+        else:
+            for i in func_select_result:
+                select_next = time_select_next + [i] + ZhiYe_select + lvl_select + DLC_select + exclude_version_select
+                clock_found_next = [*clock_found_next, *csv_data.set_to_dict(csv_data.filter_data(clock, all_filter_dict=select_next))]
+        # select_next = time_select_next + func_select(func, lang) + ZhiYe_select + lvl_select + DLC_select + exclude_version_select
+        # clock_found_next = csv_data.set_to_dict(csv_data.filter_data(clock, all_filter_dict=select_next))
     old_out_list = []
     for i in range(0, frame.out_listctrl.GetItemCount()):
         old_out_list.append(frame.out_listctrl.GetItemText(i, 0))
@@ -83,8 +99,8 @@ def clock_out(lang, Eorzea_time_in, need_tts, func, ZhiYe, lvl_min, lvl_max, cho
         for i in range(0, len(clock_found_next)):
             temp_i_result = clock_found_next[i]
             temp_out_list_2 = [temp_i_result[f'material_{lang}'], str(int(temp_i_result['level'])), temp_i_result['job'],
-                             temp_i_result['type'], temp_i_result[place_keyword], temp_i_result['near_crystal'],
-                             str(temp_i_result['start_et']), str(temp_i_result['end_et'])]
+                               temp_i_result['type'], temp_i_result[place_keyword], temp_i_result['near_crystal'],
+                               str(temp_i_result['start_et']), str(temp_i_result['end_et'])]
             out_list_next.append(temp_out_list_2)
         # endregion
         # 格式化输出
