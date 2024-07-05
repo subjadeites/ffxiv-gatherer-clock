@@ -455,8 +455,8 @@ class MainWindow(wx.Frame):
     # 自定义筛选时禁用简单筛选框，并弹出自定义筛选框
     def event_choose_select_way(self, event):
         # 初始化实例变量
-        from lib.windows import more_choose_windows
-        self.more_choose_windows = more_choose_windows
+        from lib.windows import More_Choose_Windows
+        self.more_choose_windows = More_Choose_Windows(parent=self, title="自定义筛选")
         if self.choose_select_way.GetSelection() == 0:
             self.choose_DLC.Enable()
             self.choose_func_text.Enable()
