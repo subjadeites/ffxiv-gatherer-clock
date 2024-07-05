@@ -54,7 +54,6 @@ def clock_out(lang, Eorzea_time_in, need_tts, func, ZhiYe, lvl_min, lvl_max, cho
         out_list = []
         clock_found = []
         func_select_result = func_select(func, lang)
-        print(func_select_result)
         if func_select_result == []:
             select = time_select + ZhiYe_select + lvl_select + DLC_select + exclude_version_select
             clock_found = csv_data.set_to_dict(csv_data.filter_data(clock, all_filter_dict=select))
@@ -106,29 +105,28 @@ def clock_out(lang, Eorzea_time_in, need_tts, func, ZhiYe, lvl_min, lvl_max, cho
         # 格式化输出
         if len(clock_found) == 0:
             frame.out_listctrl.InsertItem(0, '当前时段无筛选条件下结果！')
-        elif len(clock_found_next) == 0:
+        if len(clock_found_next) == 0:
             frame.out_listctrl_next.InsertItem(0, '当前时段无筛选条件下结果！')
-        else:
-            i = 0
-            for v in out_list:
-                index = frame.out_listctrl.InsertItem(i, v[0])
-                for num_i in range(1, 8):
-                    if v[num_i] is None and num_i == 5:
-                        v[num_i] = ""
-                    elif v[num_i] is None:
-                        v[num_i] = "暂无数据"
-                    frame.out_listctrl.SetItem(index, num_i, v[num_i])
-                i += 1
-            i = 0
-            for v in out_list_next:
-                index = frame.out_listctrl_next.InsertItem(i, v[0])
-                for num_i in range(1, 8):
-                    if v[num_i] is None and num_i == 5:
-                        v[num_i] = ""
-                    elif v[num_i] is None:
-                        v[num_i] = "暂无数据"
-                    frame.out_listctrl_next.SetItem(index, num_i, v[num_i])
-                i += 1
+        i = 0
+        for v in out_list:
+            index = frame.out_listctrl.InsertItem(i, v[0])
+            for num_i in range(1, 8):
+                if v[num_i] is None and num_i == 5:
+                    v[num_i] = ""
+                elif v[num_i] is None:
+                    v[num_i] = "暂无数据"
+                frame.out_listctrl.SetItem(index, num_i, v[num_i])
+            i += 1
+        i = 0
+        for v in out_list_next:
+            index = frame.out_listctrl_next.InsertItem(i, v[0])
+            for num_i in range(1, 8):
+                if v[num_i] is None and num_i == 5:
+                    v[num_i] = ""
+                elif v[num_i] is None:
+                    v[num_i] = "暂无数据"
+                frame.out_listctrl_next.SetItem(index, num_i, v[num_i])
+            i += 1
 
         # tts模块
         if need_tts == 0:
