@@ -71,7 +71,7 @@ choose:
     - - type
       - 橙票收藏品
   3:
-    - - type
+    - - in_type
       - *LingSha
   4:
     - - type
