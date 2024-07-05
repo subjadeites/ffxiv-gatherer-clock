@@ -35,7 +35,7 @@ def accept_online_msg():
         except BaseException:  # 请求在线热公告
             try:
                 try:
-                    url = 'https://ffxivclock.idataservice.com/msg'
+                    url = 'https://ffxiv-clock.gamedata.site/msg'
                     response = requests.get(url, timeout=10, headers={'User-Agent': user_agent}, proxies={"http": None, "https": None})
                     online_msg_json = response.json()
                 except BaseException:

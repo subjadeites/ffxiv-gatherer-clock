@@ -55,7 +55,7 @@ class Check_Update(Thread):
             else:
                 try:
                     try:
-                        url = 'https://ffxivclock.idataservice.com/version'
+                        url = 'https://ffxiv-clock.gamedata.site/version'
                         response = requests.get(url, timeout=7, headers={'User-Agent': user_agent}, proxies={"http": None, "https": None})
                         version_online_json = response.json()
                         version_online = version_online_json.get("Version")
