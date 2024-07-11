@@ -16,11 +16,9 @@ user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTM
 
 # 更新弹窗
 def update_info(version_online, version_online_describe: str = "未写入新版本介绍"):
-    return wx.MessageDialog(None, "发现新版本，版本号：{0}\n您当前版本号:{1}\n" \
-                                  "本次版本的新功能有：\n{2}\n\n" \
-                                  "点击【是】进入Github页面下载\n点击【否】进入NGA发布页面\n" \
-                                  "如果不想更新，请点击菜单中『文件』→『设置』修改".format(
-        version_online, version, version_online_describe),
+    return wx.MessageDialog(None,
+                            "发现新版本，版本号：{0}\n您当前版本号:{1}\n本次版本的新功能有：\n{2}\n\n点击【是】进入Github页面下载\n点击【否】进入NGA发布页面\n如果不想更新，请点击菜单中『文件』→『设置』修改".format(
+                                version_online, version, version_online_describe),
                             "新版本可用", wx.YES_NO | wx.ICON_QUESTION)
 
 
@@ -57,19 +55,14 @@ class Check_Update(Thread):
                     try:
                         url = 'https://ffxiv-clock.gamedata.site/version'
                         response = requests.get(url, timeout=7, headers={'User-Agent': user_agent}, proxies={"http": None, "https": None})
-                        version_online_json = response.json()
-                        version_online = version_online_json.get("Version")
-                        version_online_describe = version_online_json.get("describe")
-                        version_online_as_tuple = tuple(int(x) for x in version_online.split('.'))
-                        version_as_tuple = tuple(int(x) for x in version.split('.'))
                     except BaseException:
                         url = 'https://ritualsong.works/subjadeites/ffxiv-gatherer-clock/raw/branch/master/version.json'
                         response = requests.get(url, timeout=7, headers={'User-Agent': user_agent}, proxies={"http": None, "https": None})
-                        version_online_json = response.json()
-                        version_online = version_online_json.get("Version")
-                        version_online_describe = version_online_json.get("describe")
-                        version_online_as_tuple = tuple(int(x) for x in version_online.split('.'))
-                        version_as_tuple = tuple(int(x) for x in version.split('.'))
+                    version_online_json = response.json()
+                    version_online = version_online_json.get("Version")
+                    version_online_describe = version_online_json.get("describe")
+                    version_online_as_tuple = tuple(int(x) for x in version_online.split('.'))
+                    version_as_tuple = tuple(int(x) for x in version.split('.'))
                 except BaseException:
                     self.is_run = False
                     update_error_dlg = _update_error_dlg()

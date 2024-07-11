@@ -8,6 +8,7 @@ import json
 import os
 import time
 import webbrowser
+from typing import LiteralString
 
 import win32con
 import wx
@@ -34,6 +35,12 @@ class MainWindow(wx.Frame):
         self.default_client = True
         self.is_GA = True
         self.choose_lang_result = "JP"
+        # 初始化后面需要但是目前暂时不赋值的变量
+        self.more_choose_windows: wx.Frame | None = None
+        self.selected_sound: LiteralString | str = ''
+        self.Eorzea_hour: int = 0
+        self.Eorzea_min: int = 0
+        self.Eorzea_sec: int = 0
         # 设置图标
         self.SetIcon(main_icon)
         # 基础菜单
@@ -220,11 +227,11 @@ class MainWindow(wx.Frame):
 
     # ET时钟定时事件
     def Eorzea_time_clock(self, event):
-        temp_time = datetime.datetime.utcfromtimestamp((time.time() * 1440 / 70) % 86400)
+        temp_time = datetime.datetime.fromtimestamp((time.time() * 1440 / 70) % 86400, datetime.UTC)
         self.Eorzea_hour = int(temp_time.strftime("%H"))
         self.Eorzea_min = int(temp_time.strftime("%M"))
         self.Eorzea_sec = int(temp_time.strftime("%S"))
-        Eorzea_time_str = "{:02d}:{:02d}:{:02d}".format(self.Eorzea_hour, self.Eorzea_min, self.Eorzea_sec)
+        Eorzea_time_str = f"{self.Eorzea_hour:02d}:{self.Eorzea_min:02d}:{self.Eorzea_sec:02d}"
         self.Eorzea_clock_out.SetLabel(label=Eorzea_time_str)
 
     # 启动闹钟按钮点击事件
@@ -314,7 +321,7 @@ class MainWindow(wx.Frame):
 
     # 校准系统时间
     def OnClick_Ntp(self, event):
-        ntp_info = wx.MessageDialog(None,
+        ntp_info = wx.MessageDialog(self,
                                     "ET时钟不准是因为电脑本地时间不准，非程序BUG\n\n校准时钟需要管理员权限,如介意请自行百度如何校准电脑时钟，手动校准。\n\n自动校准请点是，并在弹出的UAC框中给予管理员权限重启本程序后，会自动校准。\n介意请点否，并自行百度校准时钟。",
                                     "校准时钟需要管理员权限", wx.YES_NO | wx.ICON_QUESTION)
         if ntp_info.ShowModal() == wx.ID_YES:
@@ -322,7 +329,7 @@ class MainWindow(wx.Frame):
             ntp_client = Ntp_Client()  # 实例化校时间线程
             ntp_client.start()  # 启动主程序之前校准本地时钟
         else:
-            webbrowser.open("http://buhuibaidu.me/?s=win10校准系统时间")
+            webbrowser.open("https://buhuibaidu.me/?s=win10校准系统时间")
 
     # 等级检查事件
     def lvl_check(self, event):
@@ -340,7 +347,7 @@ class MainWindow(wx.Frame):
         else:
             img_name = clock_found[0]['image']
             self.img_ctrl.Show(True)
-            img_adress = (f'./resource/img/{img_name}.png')
+            img_adress = f'./resource/img/{img_name}.png'
             if not os.path.exists(img_adress):  # 如果图片不存在则去在线源下载（用于更新版本的情况下）
                 from lib.web_service import online_img
                 online_img(img_name, self)
@@ -363,7 +370,7 @@ class MainWindow(wx.Frame):
         else:
             img_name = clock_found[0]['image']
             self.img_ctrl.Show(True)
-            img_adress = (f'./resource/img/{img_name}.png')
+            img_adress = f'./resource/img/{img_name}.png'
             img = wx.Image(img_adress, wx.BITMAP_TYPE_ANY).Scale(500, 500)
             self.img_ctrl.SetBitmap(wx.Bitmap(img))
         self.out_listctrl.SetItemState(self.out_listctrl.GetFirstSelected(), 0, wx.LIST_STATE_SELECTED)

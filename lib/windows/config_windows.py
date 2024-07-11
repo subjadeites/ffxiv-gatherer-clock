@@ -79,8 +79,7 @@ class Config_Windows(wx.Frame):
         self.Centre()
 
     def event_save_config(self, event):
-        write_dict = {}
-        write_dict['default_client'] = True if self.version_SE.GetValue() is True else False
+        write_dict = {'default_client': True if self.version_SE.GetValue() is True else False}
         if self.Update_T.GetValue() is True:
             write_dict['is_auto_update'] = True
         else:

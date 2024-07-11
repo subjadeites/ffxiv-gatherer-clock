@@ -18,6 +18,8 @@ class More_Choose_Windows(wx.Frame):
                          style=wx.CAPTION | wx.FRAME_FLOAT_ON_PARENT)  # 继承wx.Frame类
         self.main_frame = wx.Panel(self)
         self.parent = parent
+        # 初始化后面需要但是目前暂时不赋值的变量
+        self.default_items_list: list = []
         # 设置图标
         self.SetIcon(main_icon)
         # 初始化从主窗口传入的参数
@@ -26,8 +28,6 @@ class More_Choose_Windows(wx.Frame):
         # 设置窗口尺寸
         GUI_size = [(40, 20), (250, 360), (90, 35), (200, 40)]
         pos_Y = [10, 35, 90, 475, 515, 57, 455]
-        load_GUI_size = []
-        load_pos_Y = []
         self.select_dict = {
             '黄金': csv_data.set_to_dict(csv_data.filter_data(clock, all_filter_dict=[('version', '黄金')])),
             '晓月': csv_data.set_to_dict(csv_data.filter_data(clock, all_filter_dict=[('version', '晓月')])),
@@ -154,12 +154,12 @@ class More_Choose_Windows(wx.Frame):
         self.inherit = None
 
     def event_select_all(self, event):  # 全选
-        self.choose_items.SetCheckedItems(range(0, self.choose_items.Count))
+        self.choose_items.SetCheckedItems(range(0, self.choose_items.GetCount()))
 
     def event_select_reverse(self, event):  # 反选
         have_select_items = self.choose_items.GetCheckedItems()
         select_reverse_list = []
-        for i in range(0, self.choose_items.Count):
+        for i in range(0, self.choose_items.GetCount()):
             if i not in have_select_items:
                 select_reverse_list.append(i)
         self.choose_items.SetCheckedItems(select_reverse_list)
@@ -223,7 +223,7 @@ class More_Choose_Windows(wx.Frame):
                     md = wx.MessageDialog(None, """保存成功！""", "导出成功")  # 语法是(self, 内容, 标题, ID)
                     md.ShowModal()
                     md.Destroy()
-            except BaseException as err:
+            except BaseException:
                 md = wx.MessageDialog(None, """导出自定义模板文件失败。\n请检查文件权限。""", "导出成功")  # 语法是(self, 内容, 标题, ID)
                 md.ShowModal()
                 md.Destroy()

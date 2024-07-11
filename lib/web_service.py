@@ -32,17 +32,17 @@ def accept_online_msg():
         try:  # 优先读取本地代码，测试用
             with open(r'./msg.json', encoding="utf-8") as f:
                 online_msg_json = json.load(f)
-        except BaseException:  # 请求在线热公告
+        except Exception:  # 请求在线热公告
             try:
                 try:
                     url = 'https://ffxiv-clock.gamedata.site/msg'
                     response = requests.get(url, timeout=10, headers={'User-Agent': user_agent}, proxies={"http": None, "https": None})
                     online_msg_json = response.json()
-                except BaseException:
+                except Exception:
                     url = 'https://ritualsong.works/subjadeites/ffxiv-gatherer-clock/raw/branch/master/msg.json'
                     response = requests.get(url, timeout=10, headers={'User-Agent': user_agent}, proxies={"http": None, "https": None})
                     online_msg_json = response.json()
-            except BaseException:
+            except Exception:
                 pass
         title = online_msg_json.get('title')
         msg_text = online_msg_json.get('msg')
@@ -74,7 +74,7 @@ def accept_online_msg():
                     with open(r'./conf/online_msg_read', "w+", encoding="UTF-8") as f:
                         f.write(online_msg_json_md5)
                     win32api.SetFileAttributes(r'./conf/online_msg_read', win32con.FILE_ATTRIBUTE_HIDDEN)
-                except BaseException:
+                except Exception:
                     pass
             else:
                 pass
@@ -87,7 +87,7 @@ def web_api_get(url, data=None, timeout=10):
     def thread_func():
         try:
             requests.get(url, data=data, timeout=timeout, headers={'referer': f'{version}'}, proxies={"http": None, "https": None})
-        except BaseException:
+        except Exception:
             pass
 
     Thread(target=thread_func(), daemon=True).start()
@@ -97,18 +97,19 @@ def online_img(img_name, frame):
     def thread_func():
         try:
             try:
-                online_img = requests.get(f"https://clock.ffxiv.wang/img/{img_name}.png", timeout=5, proxies={"http": None, "https": None}).content
+                _online_img = requests.get(f"https://clock.ffxiv.wang/img/{img_name}.png", timeout=5, proxies={"http": None, "https": None}).content
                 with open(rf"./resource/img/{img_name}.png", "wb") as f:
-                    f.write(online_img)
-            except:
-                online_img = requests.get(f"https://ritualsong.works/subjadeites/ffxiv-gatherer-clock/raw/branch/master/resource/img/{img_name}.png", timeout=5, proxies={"http": None, "https": None}).content
+                    f.write(_online_img)
+            except Exception:
+                _online_img = requests.get(f"https://ritualsong.works/subjadeites/ffxiv-gatherer-clock/raw/branch/master/resource/img/{img_name}.png", timeout=5,
+                                           proxies={"http": None, "https": None}).content
                 with open(rf"./resource/img/{img_name}.png", "wb") as f:
-                    f.write(online_img)
+                    f.write(_online_img)
             img_adress = ('./resource/img/' + img_name + '.png')
             img = wx.Image(img_adress, wx.BITMAP_TYPE_ANY).Scale(500, 500)
             frame.img_ctrl.SetBitmap(wx.Bitmap(img))
-        except:
-            img_adress = ('./resource/img/0.jpg')
+        except Exception:
+            img_adress = r'./resource/img/0.jpg'
             img = wx.Image(img_adress, wx.BITMAP_TYPE_ANY).Scale(500, 500)
             frame.img_ctrl.SetBitmap(wx.Bitmap(img))
 
@@ -128,26 +129,25 @@ class Get_Clock(Thread):
                     clock_csv = requests.get("https://ritualsong.works/subjadeites/ffxiv-gatherer-clock/raw/branch/master/resource/list.csv", timeout=5, proxies={"http": None, "https": None}).content
                     with open("./resource/list.csv", "wb") as f:
                         f.write(clock_csv)
-                except:
+                except Exception:
                     clock_csv = requests.get("https://clock.ffxiv.wang/list", timeout=5, proxies={"http": None, "https": None}).content
                     with open("./resource/list.csv", "wb") as f:
                         f.write(clock_csv)
-            except:
+            except Exception:
                 wx.MessageDialog(None, "网络连接失败，无法获取在线采集时钟数据库，将加载本地时钟。", "在线数据库暂时无法使用", wx.OK | wx.ICON_ERROR).ShowModal()
             finally:
                 try:
                     clock = csv_data.load_csv(r'./resource/list.csv'.encode('utf-8'))
                     csv_cant_read = False
-                except BaseException:
+                except Exception:
                     clock = None
                     csv_cant_read = True
-                    clock_yaml = None
 
         else:
             try:
                 clock = csv_data.load_csv(r'./resource/list.csv'.encode('utf-8'))
                 csv_cant_read = False
-            except BaseException:
+            except Exception:
                 clock = None
                 csv_cant_read = True
 
@@ -169,18 +169,18 @@ class Get_Clock_Yaml(Thread):
                     with open('clock.yaml', 'wb') as f:
                         f.write(clock_yaml)
 
-                except:
+                except Exception:
                     clock_yaml = requests.get("https://clock.ffxiv.wang/yaml", timeout=5, proxies={"http": None, "https": None}).content
                     with open('clock.yaml', 'wb') as f:
                         f.write(clock_yaml)
-            except:
+            except Exception:
                 wx.MessageDialog(None, "网络连接失败，无法获取在线版本设置文件，将加载本地版本文件。", "在线版本设置暂时无法使用", wx.OK | wx.ICON_ERROR).ShowModal()
             finally:
                 try:
                     with open('./clock.yaml', 'r', encoding='utf-8') as f:
                         clock_yaml = yaml.safe_load(f)
                         yaml_cant_read = False
-                except BaseException:
+                except Exception:
                     yaml_cant_read = True
                     clock_yaml = None
 
@@ -189,12 +189,11 @@ class Get_Clock_Yaml(Thread):
                 with open('./clock.yaml', 'r', encoding='utf-8') as f:
                     clock_yaml = yaml.safe_load(f)
                     yaml_cant_read = False
-            except BaseException:
+            except Exception:
                 yaml_cant_read = True
                 clock_yaml = None
 
         from lib import public
-        public.clock_yaml = clock_yaml
         public.csv_cant_read = yaml_cant_read
         clockyaml = public.ClockYaml(clock_yaml)
         public.VERSION_DIFF_DICT = clockyaml.VERSION_DIFF_DICT

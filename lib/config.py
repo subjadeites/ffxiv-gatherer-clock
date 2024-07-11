@@ -33,7 +33,7 @@ class Config:
                 self.config_cant_read = False
                 self.is_custom_tts = config_json.get('is_custom_tts') if config_json.get('is_custom_tts') is not None else False
                 self.custom_tts_word = config_json.get('custom_tts_word') if config_json.get('custom_tts_word') is not None else ""
-            if config_json.get('is_GA') is not None: # 用于删除旧版本的GA设置 TODO：2.0.0版本后删除
+            if config_json.get('is_GA') is not None:  # 用于删除旧版本的GA设置 TODO：2.0.0版本后删除
                 del config_json['is_GA']
                 with open("./conf/config.json", "w", encoding="utf-8-sig") as f:
                     json.dump(config_json, f, ensure_ascii=False)
@@ -52,7 +52,7 @@ class Config:
             self.is_auto_update = True
             self.is_custom_tts = False
             self.custom_tts_word = ""
-        except:
+        except BaseException:
             self.default_client = True
             self.is_online_csv = True
             self.config_cant_read = True
@@ -73,11 +73,11 @@ def top_windows_pos() -> tuple:
         with open(r'./conf/config.json', 'r', encoding="utf-8-sig") as f:
             result = json.load(f)
             if result.get('top_windows_pos') is None:
-                return (0, 0)
+                return 0, 0
             else:
                 return result.get('top_windows_pos')
     except FileNotFoundError:
-        return (0, 0)
+        return 0, 0
 
 
 def top_windows_transparent() -> int:

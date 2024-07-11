@@ -8,10 +8,9 @@ import time
 
 import wx
 
-global clock, clock_yaml, VERSION_DIFF_DICT, choose_dict,LingSha_list, JingZhi_list,choose_ZhiYe_dict, choose_DLC_dict, cn_not_have_version
+global clock, VERSION_DIFF_DICT, choose_dict, LingSha_list, JingZhi_list, choose_ZhiYe_dict, choose_DLC_dict, cn_not_have_version
 csv_cant_read = None
 yaml_cant_read = None
-
 
 # 图标设定
 main_icon = wx.Icon('./resource/Clock.ico', wx.BITMAP_TYPE_ICO)
@@ -22,8 +21,8 @@ config_size = (365, 500)
 top_windows_size = (480, 350)
 
 Eorzea_time_start = "{:02d}：{:02d}".format(
-    int(datetime.datetime.utcfromtimestamp((time.time() * 1440 / 70) % 86400).strftime("%H")),
-    int(datetime.datetime.utcfromtimestamp((time.time() * 1440 / 70) % 86400).strftime("%M")))
+    int(datetime.datetime.fromtimestamp((time.time() * 1440 / 70) % 86400, datetime.UTC).strftime("%H")),
+    int(datetime.datetime.fromtimestamp((time.time() * 1440 / 70) % 86400, datetime.UTC).strftime("%M")))
 
 
 def func_select(func: list, lang: str) -> list[tuple]:
@@ -57,12 +56,13 @@ def Eorzea_time() -> int:
     Returns:
         Eorzea hour
     """
-    temp_time = datetime.datetime.utcfromtimestamp((time.time() * 1440 / 70) % 86400)
+    temp_time = datetime.datetime.fromtimestamp((time.time() * 1440 / 70) % 86400, datetime.UTC)
     Eorzea_hour = int(temp_time.strftime("%H"))
     # Eorzea_min = int(temp_time.strftime("%M"))
     return Eorzea_hour
 
-class ClockYaml():
+
+class ClockYaml:
     def __init__(self, clock_yaml: dict):
         self.VERSION_DIFF_DICT = clock_yaml['version_diff']
         self.cn_not_have_version = self.VERSION_DIFF_DICT['global']['patch'] if self.VERSION_DIFF_DICT['global']['patch'] != self.VERSION_DIFF_DICT['cn']['patch'] else None
@@ -87,4 +87,3 @@ class ClockYaml():
             '新生': [('version', '新生')],
             '国服全部': [('!patch', self.cn_not_have_version)]
         }
-

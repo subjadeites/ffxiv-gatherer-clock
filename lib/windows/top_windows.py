@@ -45,20 +45,20 @@ class Top_Windows(wx.Frame):
         self.Bind(wx.EVT_CLOSE, self.OnClose)  # 绑定关闭事件
         self.Centre()
 
-    def trans_clock_result(self, now_list: list, next_list: list, top_windows_size: tuple):
+    def trans_clock_result(self, now_list: list, next_list: list, windows_size: tuple):
         """
         接收从main_windows传来的数据,随后写入悬浮窗
         :param now_list: list 当前时间段结果
         :param next_list: list 下一个时间段结果 【暂时不用】
-        :param top_windows_size: tuple 当前悬浮窗大小
+        :param windows_size: tuple 当前悬浮窗大小
         """
         if len(now_list) < 6:
-            all_list = [*now_list,("***","***","***","***","***") ,*next_list]
+            all_list = [*now_list, ("***", "***", "***", "***", "***"), *next_list]
         else:
             all_list = now_list
         all_text = AsciiTable(all_list).table
         self.now_text.SetLabel(all_text)
-        self.close_button.SetPosition((top_windows_size[0] - 100, top_windows_size[1] - 80))
+        self.close_button.SetPosition((windows_size[0] - 100, windows_size[1] - 80))
 
     # 改变窗口大小事件
     def change_size(self, event):

@@ -18,7 +18,7 @@ hosts = ['0.cn.pool.ntp.org', '1.cn.pool.ntp.org', '2.cn.pool.ntp.org', '3.cn.po
 def is_admin():
     try:
         return ctypes.windll.shell32.IsUserAnAdmin()
-    except:
+    except Exception:
         return False
 
 
@@ -37,7 +37,7 @@ class Ntp_Client(Thread):
                         _date, _time = str(datetime.datetime.fromtimestamp(t))[:22].split(' ')  # 格式化：x年x月x日 时:分:秒.毫秒
                         os.system('date {} && time {}'.format(_date, _time))  # 设置系统时间
                         break
-                except Exception as e:
+                except Exception:
                     pass
         else:
             ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, __file__, None, 1)  # 调用系统管理员权限

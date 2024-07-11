@@ -39,9 +39,9 @@ try:
     # 导入系统tts
     spk = win32com.client.Dispatch("SAPI.SpVoice")
     tts('')
-except:
+except Exception:
     tts_err = wx.MessageDialog(None, "系统TTS不存在，无法导入。\n点击 确定 查看文档解决。\n点击 取消 以限制模式运行。", "导入系统TTS失败！",
-                     wx.YES_NO | wx.ICON_ERROR)
+                               wx.YES_NO | wx.ICON_ERROR)
     if tts_err.ShowModal() == wx.ID_YES:
         webbrowser.open("https://bbs.nga.cn/read.php?tid=29755989&page=6#pid598201942")
         exit()

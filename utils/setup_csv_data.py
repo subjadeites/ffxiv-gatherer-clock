@@ -23,7 +23,7 @@ if is_mingw():
     os.environ["CXX"] = r"C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.34.31933\bin\Hostx64\x64\cl.exe"
     os.environ["PATH"] = os.environ["PATH"].replace(r";C:\MinGW\bin", "")
 
-os.chdir( r'../bin/')
+os.chdir(r'../bin/')
 
 setup(
     ext_modules=cythonize("csv_data.pyx")

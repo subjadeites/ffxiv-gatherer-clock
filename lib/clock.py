@@ -51,10 +51,10 @@ def clock_out(lang, Eorzea_time_in, need_tts, func, ZhiYe, lvl_min, lvl_max, cho
         select_next = time_select_next + [('name', more_select_result)] + exclude_version_select
         clock_found_next = csv_data.set_to_dict(csv_data.filter_data(clock, all_filter_dict=select_next))
     else:  # DLC筛选模式
+        func_select_result = func_select(func, lang)
         out_list = []
         clock_found = []
-        func_select_result = func_select(func, lang)
-        if func_select_result == []:
+        if not func_select_result:
             select = time_select + ZhiYe_select + lvl_select + DLC_select + exclude_version_select
             clock_found = csv_data.set_to_dict(csv_data.filter_data(clock, all_filter_dict=select))
         else:
@@ -64,15 +64,14 @@ def clock_out(lang, Eorzea_time_in, need_tts, func, ZhiYe, lvl_min, lvl_max, cho
         # 这部分是用于预告下一次刷新的代码
         out_list_next = []
         clock_found_next = []
-        if func_select_result == []:
+        if not func_select_result:
             select_next = time_select_next + ZhiYe_select + lvl_select + DLC_select + exclude_version_select
             clock_found_next = csv_data.set_to_dict(csv_data.filter_data(clock, all_filter_dict=select_next))
         else:
             for i in func_select_result:
                 select_next = time_select_next + [i] + ZhiYe_select + lvl_select + DLC_select + exclude_version_select
                 clock_found_next = [*clock_found_next, *csv_data.set_to_dict(csv_data.filter_data(clock, all_filter_dict=select_next))]
-        # select_next = time_select_next + func_select(func, lang) + ZhiYe_select + lvl_select + DLC_select + exclude_version_select
-        # clock_found_next = csv_data.set_to_dict(csv_data.filter_data(clock, all_filter_dict=select_next))
+
     old_out_list = []
     for i in range(0, frame.out_listctrl.GetItemCount()):
         old_out_list.append(frame.out_listctrl.GetItemText(i, 0))
@@ -88,45 +87,57 @@ def clock_out(lang, Eorzea_time_in, need_tts, func, ZhiYe, lvl_min, lvl_max, cho
     else:
         frame.img_ctrl.Show(False)  # 关闭图片窗体显示
         place_keyword = 'area_EN' if lang == 'EN' else 'area_CN'  # i18n用
-        for i in range(0, len(clock_found)):
-            temp_i_result = clock_found[i]
-            temp_out_list = [temp_i_result[f'material_{lang}'], str(int(temp_i_result['level'])), temp_i_result['job'],
-                             temp_i_result['type'], temp_i_result[place_keyword], temp_i_result['near_crystal'],
-                             str(temp_i_result['start_et']), str(temp_i_result['end_et'])]
-            out_list.append(temp_out_list)
-        # region 这部分是用于预告下一次刷新的代码
-        for i in range(0, len(clock_found_next)):
-            temp_i_result = clock_found_next[i]
-            temp_out_list_2 = [temp_i_result[f'material_{lang}'], str(int(temp_i_result['level'])), temp_i_result['job'],
-                               temp_i_result['type'], temp_i_result[place_keyword], temp_i_result['near_crystal'],
-                               str(temp_i_result['start_et']), str(temp_i_result['end_et'])]
-            out_list_next.append(temp_out_list_2)
-        # endregion
+
+        def process_clock_found(clock_found_result):
+            """
+            处理筛选结果
+            Args:
+                clock_found_result: 筛选结果(clock_found/clock_found_next)
+            Returns:
+
+            """
+            return [
+                [
+                    item[f'material_{lang}'],
+                    str(int(item['level'])),
+                    item['job'],
+                    item['type'],
+                    item[place_keyword],
+                    item['near_crystal'],
+                    str(item['start_et']),
+                    str(item['end_et'])
+                ]
+                for item in clock_found_result
+            ]
+
+        out_list = process_clock_found(clock_found)
+        out_list_next = process_clock_found(clock_found_next)
+
         # 格式化输出
         if len(clock_found) == 0:
             frame.out_listctrl.InsertItem(0, '当前时段无筛选条件下结果！')
         if len(clock_found_next) == 0:
             frame.out_listctrl_next.InsertItem(0, '当前时段无筛选条件下结果！')
-        i = 0
-        for v in out_list:
-            index = frame.out_listctrl.InsertItem(i, v[0])
-            for num_i in range(1, 8):
-                if v[num_i] is None and num_i == 5:
-                    v[num_i] = ""
-                elif v[num_i] is None:
-                    v[num_i] = "暂无数据"
-                frame.out_listctrl.SetItem(index, num_i, v[num_i])
-            i += 1
-        i = 0
-        for v in out_list_next:
-            index = frame.out_listctrl_next.InsertItem(i, v[0])
-            for num_i in range(1, 8):
-                if v[num_i] is None and num_i == 5:
-                    v[num_i] = ""
-                elif v[num_i] is None:
-                    v[num_i] = "暂无数据"
-                frame.out_listctrl_next.SetItem(index, num_i, v[num_i])
-            i += 1
+
+        def insert_items(list_ctrl, data_list):
+            """
+            插入数据到list_ctrl
+            Args:
+                list_ctrl: 主窗口里的list_ctrl对象(frame.out_listctrl/frame.out_listctrl_next)
+                data_list: 数据列表(out_list/out_list_next)
+
+            Returns:
+
+            """
+            for _i, v in enumerate(data_list):
+                index = list_ctrl.InsertItem(_i, v[0])
+                for num_i in range(1, 8):
+                    if v[num_i] is None:
+                        v[num_i] = "" if num_i == 5 else "暂无数据"
+                    list_ctrl.SetItem(index, num_i, v[num_i])
+
+        insert_items(frame.out_listctrl, out_list)
+        insert_items(frame.out_listctrl_next, out_list_next)
 
         # tts模块
         if need_tts == 0:
@@ -135,7 +146,7 @@ def clock_out(lang, Eorzea_time_in, need_tts, func, ZhiYe, lvl_min, lvl_max, cho
                 temp_i = out_list[i]
                 if out_list[i][0] in old_out_list and next_clock_time != -1:
                     pass
-                elif configs.is_custom_tts == True:
+                elif configs.is_custom_tts is True:
                     tts_word += custom_tts_parse(custom_str=configs.custom_tts_word, out_list_current_line=temp_i)
                 else:
                     nearby = '' if temp_i[5] == '暂无数据' else temp_i[5]
@@ -173,12 +184,14 @@ def trans_top_windows_data(out_list: list, out_list_next: list, choose_lang: str
     :param out_list: clock_out()中得出的当前时间段的时限输出
     :param out_list_next: clock_out()中得出的下个时间段的时限输出
     """
-    now_list = [("职能", "道具名", "接近水晶", "地区", "ET区间")]
-    next_list = []
-    for i in range(0, len(out_list)):
-        now_list.append((out_list[i][2], out_list[i][0], out_list[i][5], out_list[i][4], f"{out_list[i][6]}-{out_list[i][7]}"))
-    for i in range(0, len(out_list_next)):
-        next_list.append((out_list_next[i][2], out_list_next[i][0], out_list_next[i][5], out_list_next[i][4], f"{out_list_next[i][6]}-{out_list_next[i][7]}"))
+    now_list = [("职能", "道具名", "接近水晶", "地区", "ET区间")] + [
+        (item[2], item[0], item[5], item[4], f"{item[6]}-{item[7]}")
+        for item in out_list
+    ]
+    next_list = [
+        (item[2], item[0], item[5], item[4], f"{item[6]}-{item[7]}")
+        for item in out_list_next
+    ]
     if choose_lang != "CN":
         top_windows_size = (570, 350)
     else:
