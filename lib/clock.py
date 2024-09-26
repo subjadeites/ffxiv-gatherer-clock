@@ -59,8 +59,14 @@ def clock_out(lang, Eorzea_time_in, need_tts, func, ZhiYe, lvl_min, lvl_max, cho
             clock_found = csv_data.set_to_dict(csv_data.filter_data(clock, all_filter_dict=select))
         else:
             for i in func_select_result:
-                select = time_select + [i] + ZhiYe_select + lvl_select + DLC_select + exclude_version_select
-                clock_found = [*clock_found, *csv_data.set_to_dict(csv_data.filter_data(clock, all_filter_dict=select))]
+                select_next = time_select_next + ZhiYe_select + lvl_select + DLC_select + exclude_version_select
+                if len(i) == 1:
+                    select_next += i
+                    clock_found = [*clock_found, *csv_data.set_to_dict(csv_data.filter_data(clock, all_filter_dict=select_next))]
+                else:
+                    for ii in i:
+                        select_next += [ii]
+                    clock_found = [*clock_found, *csv_data.set_to_dict(csv_data.filter_data(clock, all_filter_dict=select_next))]
         # 这部分是用于预告下一次刷新的代码
         out_list_next = []
         clock_found_next = []
@@ -69,8 +75,14 @@ def clock_out(lang, Eorzea_time_in, need_tts, func, ZhiYe, lvl_min, lvl_max, cho
             clock_found_next = csv_data.set_to_dict(csv_data.filter_data(clock, all_filter_dict=select_next))
         else:
             for i in func_select_result:
-                select_next = time_select_next + [i] + ZhiYe_select + lvl_select + DLC_select + exclude_version_select
-                clock_found_next = [*clock_found_next, *csv_data.set_to_dict(csv_data.filter_data(clock, all_filter_dict=select_next))]
+                select_next = time_select_next + ZhiYe_select + lvl_select + DLC_select + exclude_version_select
+                if len(i) == 1:
+                    select_next += i
+                    clock_found_next = [*clock_found_next, *csv_data.set_to_dict(csv_data.filter_data(clock, all_filter_dict=select_next))]
+                else:
+                    for ii in i:
+                        select_next += [ii]
+                    clock_found_next = [*clock_found_next, *csv_data.set_to_dict(csv_data.filter_data(clock, all_filter_dict=select_next))]
 
     old_out_list = []
     for i in range(0, frame.out_listctrl.GetItemCount()):
