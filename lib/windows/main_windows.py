@@ -16,7 +16,7 @@ import wx
 from bin import csv_data
 from lib.clock import Clock_Thread, clock_thread
 from lib.config import configs
-from lib.public import main_size, main_icon, clock, Eorzea_time_start, more_choose_size, config_size
+from lib.public import main_size, main_icon, clock, Eorzea_time_start, more_choose_size, config_size, global_special_func_list, cn_special_func_list, VERSION_DIFF_DICT
 from lib.update import version, check_update, Check_Update, update_info
 from lib.web_service import accept_online_msg
 from utils.play_audio import PlayWav
@@ -114,22 +114,13 @@ class MainWindow(wx.Frame):
             (7, '晶簇', 725),
         ]
         self.choose_func_box_dict = {}
+        self.now_special_func_list = []  # 初始化，用于动态存储当前语言设定中特殊筛选的内容
         for i in choose_func_list:
             check_box = wx.CheckBox(self.main_frame, -1, i[1], pos=(i[2], self.line_pos[3]))
             self.choose_func_box_dict[i[0]] = check_box
             # 包浆和水晶晶簇有限定等级，因此绑定事件
             if i[1] in ['传说：精制魔晶石', '水晶', '晶簇']:
                 self.Bind(wx.EVT_CHECKBOX, self.choose_func_auto_write, check_box)
-        choose_special_func_list = [
-            (63, '[6.3]生产采集绿装材料', 340, (255, 0, 0, 255)),
-            (64, '[6.4]640HQ材料', 225, (255, 0, 0, 255)),
-        ]
-        now_patch_font = wx.Font(9, 74, 90, 700, False, 'Microsoft YaHei UI', 28)
-        for i in choose_special_func_list:
-            check_box = wx.CheckBox(self.main_frame, -1, i[1], pos=(i[2], self.line_pos[4] + 1))
-            check_box.SetFont(now_patch_font)
-            check_box.SetForegroundColour(i[3])
-            self.choose_func_box_dict[i[0]] = check_box
         # 设置等级上下限输入框
         self.lvl_text = wx.StaticText(self.main_frame, label='请选择等级区间：', pos=(10, self.line_pos[4]))
         self.lvl_min = wx.SpinCtrl(self.main_frame, size=(45, 20), pos=(110, self.line_pos[4]), name='wxSpinCtrl', min=0, max=100, initial=90, style=0)
@@ -384,6 +375,17 @@ class MainWindow(wx.Frame):
         SetClipboardData(win32con.CF_UNICODETEXT, click_name)
         CloseClipboard()
 
+    def special_func_setting(self, special_func_list):
+        now_patch_font = wx.Font(9, 74, 90, 700, False, 'Microsoft YaHei UI', 28)
+        for i in self.now_special_func_list:
+            self.choose_func_box_dict[i[0]].Destroy()
+        for i in special_func_list:
+            check_box = wx.CheckBox(self.main_frame, -1, i[1], pos=(i[2], self.line_pos[4] + 1))
+            check_box.SetFont(now_patch_font)
+            check_box.SetForegroundColour(i[3])
+            self.choose_func_box_dict[i[0]] = check_box
+        self.now_special_func_list = special_func_list
+
     # 动态根据客户端版本修正语言
     def event_choose_client(self, event):
         if self.choose_client.GetSelection() == 0:
@@ -391,9 +393,8 @@ class MainWindow(wx.Frame):
             self.choose_lang.SetItemLabel(1, "英语EN")
 
             self.choose_DLC.Destroy()
-            self.choose_DLC = wx.RadioBox(self.main_frame, -1, "选择版本", (10, self.line_pos[2]), wx.DefaultSize, ['黄金', '全部', '晓月', '漆黑', '红莲', '苍天', '新生'], 7, wx.RA_SPECIFY_COLS)
-            self.choose_func_box_dict[63].Show(False)
-            self.choose_func_box_dict[64].Show(False)
+            self.choose_DLC = wx.RadioBox(self.main_frame, -1, "选择版本", (10, self.line_pos[2]), wx.DefaultSize, VERSION_DIFF_DICT['global']['DLC'], 7, wx.RA_SPECIFY_COLS)
+            self.special_func_setting(global_special_func_list)
             self.choose_func_box_dict[1].SetLabel("紫票收藏品")
             self.choose_func_box_dict[2].SetLabel("橙票收藏品")
             self.Bind(wx.EVT_RADIOBOX, self.DLC_to_lvl, self.choose_DLC)
@@ -404,12 +405,11 @@ class MainWindow(wx.Frame):
             self.choose_lang.SetItemLabel(1, "中文CN")
 
             self.choose_DLC.Destroy()
-            self.choose_func_box_dict[63].Show(True)
-            self.choose_func_box_dict[64].Show(True)
-            self.choose_DLC = wx.RadioBox(self.main_frame, -1, "选择版本", (10, self.line_pos[2]), wx.DefaultSize, ['晓月', '全部', '漆黑', '红莲', '苍天', '新生'], 7, wx.RA_SPECIFY_COLS)
+            self.special_func_setting(cn_special_func_list)
+            self.choose_DLC = wx.RadioBox(self.main_frame, -1, "选择版本", (10, self.line_pos[2]), wx.DefaultSize, VERSION_DIFF_DICT['cn']['DLC'], 7, wx.RA_SPECIFY_COLS)
             self.Bind(wx.EVT_RADIOBOX, self.DLC_to_lvl, self.choose_DLC)
-            self.choose_func_box_dict[1].SetLabel("白票收藏品")
-            self.choose_func_box_dict[2].SetLabel("紫票收藏品")
+            self.choose_func_box_dict[1].SetLabel("紫票收藏品")
+            self.choose_func_box_dict[2].SetLabel("橙票收藏品")
 
             self.DLC_to_lvl(event)
 

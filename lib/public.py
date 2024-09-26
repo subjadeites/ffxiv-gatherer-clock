@@ -8,7 +8,7 @@ import time
 
 import wx
 
-global clock, VERSION_DIFF_DICT, choose_dict, LingSha_list, JingZhi_list, choose_ZhiYe_dict, choose_DLC_dict, cn_not_have_version
+global clock, VERSION_DIFF_DICT, choose_dict, LingSha_list, JingZhi_list, choose_ZhiYe_dict, choose_DLC_dict, cn_not_have_version, cn_special_func_list, global_special_func_list, clockyaml
 csv_cant_read = None
 yaml_cant_read = None
 
@@ -46,7 +46,7 @@ def func_select(func: list, lang: str) -> list[tuple]:
                 k = 61
             if k == 2 and lang == 'CN' and cn_not_have_version == 7.0:
                 k = 62
-            result += choose_dict.get(k)
+            result += [choose_dict.get(k)]
         return result
 
 
@@ -87,3 +87,15 @@ class ClockYaml:
             '新生': [('version', '新生')],
             '国服全部': [('!patch', self.cn_not_have_version)]
         }
+        global_special_func_dict = clock_yaml['special_func']['global']
+        global_special_func_list = []
+        for k, v in global_special_func_dict.items():
+            if k <= self.VERSION_DIFF_DICT['global']['patch'] * 10:
+                global_special_func_list.append((k, v[0], v[1], tuple(v[2])))
+        self.global_special_func_list = global_special_func_list
+        cn_special_func_dict = clock_yaml['special_func']['cn']
+        cn_special_func_list = []
+        for k, v in cn_special_func_dict.items():
+            if k <= self.VERSION_DIFF_DICT['cn']['patch'] * 10:
+                cn_special_func_list.append((k, v[0], v[1], tuple(v[2])))
+        self.cn_special_func_list = cn_special_func_list

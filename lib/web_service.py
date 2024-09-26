@@ -196,6 +196,7 @@ class Get_Clock_Yaml(Thread):
         from lib import public
         public.csv_cant_read = yaml_cant_read
         clockyaml = public.ClockYaml(clock_yaml)
+        public.clockyaml = clockyaml
         public.VERSION_DIFF_DICT = clockyaml.VERSION_DIFF_DICT
         public.choose_dict = clockyaml.choose_dict
         public.LingSha_list = clockyaml.LingSha_list
@@ -203,3 +204,5 @@ class Get_Clock_Yaml(Thread):
         public.choose_ZhiYe_dict = clockyaml.choose_ZhiYe_dict
         public.choose_DLC_dict = clockyaml.choose_DLC_dict
         public.cn_not_have_version = clockyaml.cn_not_have_version
+        public.cn_special_func_list = clockyaml.cn_special_func_list
+        public.global_special_func_list = clockyaml.global_special_func_list
