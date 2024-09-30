@@ -39,7 +39,7 @@ def accept_online_msg():
                     response = requests.get(url, timeout=10, headers={'User-Agent': user_agent}, proxies={"http": None, "https": None})
                     online_msg_json = response.json()
                 except Exception:
-                    url = 'https://ritualsong.works/subjadeites/ffxiv-gatherer-clock/raw/branch/master/msg.json'
+                    url = 'https://ritualsong.work/subjadeites/ffxiv-gatherer-clock/raw/branch/master/msg.json'
                     response = requests.get(url, timeout=10, headers={'User-Agent': user_agent}, proxies={"http": None, "https": None})
                     online_msg_json = response.json()
             except Exception:
@@ -101,7 +101,7 @@ def online_img(img_name, frame):
                 with open(rf"./resource/img/{img_name}.png", "wb") as f:
                     f.write(_online_img)
             except Exception:
-                _online_img = requests.get(f"https://ritualsong.works/subjadeites/ffxiv-gatherer-clock/raw/branch/master/resource/img/{img_name}.png", timeout=5,
+                _online_img = requests.get(f"https://ritualsong.work/subjadeites/ffxiv-gatherer-clock/raw/branch/master/resource/img/{img_name}.png", timeout=5,
                                            proxies={"http": None, "https": None}).content
                 with open(rf"./resource/img/{img_name}.png", "wb") as f:
                     f.write(_online_img)
@@ -126,7 +126,7 @@ class Get_Clock(Thread):
         if not self.is_dev:
             try:
                 try:
-                    clock_csv = requests.get("https://ritualsong.works/subjadeites/ffxiv-gatherer-clock/raw/branch/master/resource/list.csv", timeout=5, proxies={"http": None, "https": None}).content
+                    clock_csv = requests.get("https://ritualsong.work/subjadeites/ffxiv-gatherer-clock/raw/branch/master/resource/list.csv", timeout=5, proxies={"http": None, "https": None}).content
                     with open("./resource/list.csv", "wb") as f:
                         f.write(clock_csv)
                 except Exception:
@@ -165,7 +165,7 @@ class Get_Clock_Yaml(Thread):
         if not self.is_dev:
             try:
                 try:
-                    clock_yaml = requests.get("https://ritualsong.works/subjadeites/ffxiv-gatherer-clock/raw/branch/master/clock.yaml", timeout=5, proxies={"http": None, "https": None}).content
+                    clock_yaml = requests.get("https://ritualsong.work/subjadeites/ffxiv-gatherer-clock/raw/branch/master/clock.yaml", timeout=5, proxies={"http": None, "https": None}).content
                     with open('clock.yaml', 'wb') as f:
                         f.write(clock_yaml)
 
