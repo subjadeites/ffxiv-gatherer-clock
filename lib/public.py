@@ -65,7 +65,7 @@ def Eorzea_time() -> int:
 class ClockYaml:
     def __init__(self, clock_yaml: dict):
         self.VERSION_DIFF_DICT = clock_yaml['version_diff']
-        self.cn_not_have_version = self.VERSION_DIFF_DICT['global']['patch'] if self.VERSION_DIFF_DICT['global']['patch'] != self.VERSION_DIFF_DICT['cn']['patch'] else None
+        self.cn_not_have_version = self.VERSION_DIFF_DICT['global']['patch'] if self.VERSION_DIFF_DICT['global']['patch'] != self.VERSION_DIFF_DICT['cn']['patch'] else '0.0'
 
         self.LingSha_list = clock_yaml['LingSha']
 

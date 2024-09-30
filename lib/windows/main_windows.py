@@ -250,7 +250,7 @@ class MainWindow(wx.Frame):
                 if self.choose_client.GetSelection() == 0:
                     choose_DLC_result = ['黄金', '全部', '晓月', '漆黑', '红莲', '苍天', '新生'][self.choose_DLC.GetSelection()]  # 简单筛选DLC版本
                 else:
-                    choose_DLC_result = ['晓月', '全部', '漆黑', '红莲', '苍天', '新生'][self.choose_DLC.GetSelection()]  # 简单筛选DLC版本
+                    choose_DLC_result = ['黄金', '全部', '晓月', '漆黑', '红莲', '苍天', '新生'][self.choose_DLC.GetSelection()]  # 简单筛选DLC版本
             else:
                 choose_DLC_result = '自定义筛选'
             lvl_min_result = self.lvl_min.GetValue()
@@ -540,8 +540,8 @@ class MainWindow(wx.Frame):
             self.lvl_min.SetValue(50)
             self.lvl_max.SetValue(100)
         elif self.choose_DLC.GetSelection() == 0 and self.choose_client.GetSelection() == 1:
-            self.lvl_min.SetValue(80)
-            self.lvl_max.SetValue(90)
+            self.lvl_min.SetValue(90)
+            self.lvl_max.SetValue(100)
         elif self.choose_DLC.GetSelection() == 1 and self.choose_client.GetSelection() == 1:
             self.lvl_min.SetValue(50)
             self.lvl_max.SetValue(90)
