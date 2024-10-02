@@ -59,14 +59,14 @@ def clock_out(lang, Eorzea_time_in, need_tts, func, ZhiYe, lvl_min, lvl_max, cho
             clock_found = csv_data.set_to_dict(csv_data.filter_data(clock, all_filter_dict=select))
         else:
             for i in func_select_result:
-                select_next = time_select_next + ZhiYe_select + lvl_select + DLC_select + exclude_version_select
+                select = time_select + ZhiYe_select + lvl_select + DLC_select + exclude_version_select
                 if len(i) == 1:
-                    select_next += i
-                    clock_found = [*clock_found, *csv_data.set_to_dict(csv_data.filter_data(clock, all_filter_dict=select_next))]
+                    select += i
+                    clock_found = [*clock_found, *csv_data.set_to_dict(csv_data.filter_data(clock, all_filter_dict=select))]
                 else:
                     for ii in i:
-                        select_next += [ii]
-                    clock_found = [*clock_found, *csv_data.set_to_dict(csv_data.filter_data(clock, all_filter_dict=select_next))]
+                        select += [ii]
+                    clock_found = [*clock_found, *csv_data.set_to_dict(csv_data.filter_data(clock, all_filter_dict=select))]
         # 这部分是用于预告下一次刷新的代码
         out_list_next = []
         clock_found_next = []
