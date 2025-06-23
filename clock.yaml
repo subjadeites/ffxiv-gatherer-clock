@@ -13,8 +13,8 @@ version_diff:
       - 苍天
       - 新生
   cn:
-    patch: 7.1
-    legendary_star: 1
+    patch: 7.2
+    legendary_star: 2
     DLC:
       - 黄金
       - 全部
@@ -117,8 +117,8 @@ special_func:
       - 350
       - [ 255, 0, 0, 255 ]
   cn:
-    70:
-      - "[7.05]710HQ材料"
+    72:
+      - "[7.2]740HQ材料"
       - 225
       - [ 255, 0, 0, 255 ]
     71: # 备用
