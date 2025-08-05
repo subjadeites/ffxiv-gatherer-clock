@@ -53,7 +53,7 @@ class Check_Update(Thread):
             else:
                 try:
                     try:
-                        url = 'https://ffxiv-clock.gamedata.site/version'
+                        url = 'https://clock.ffxiv.wang/version'
                         response = requests.get(url, timeout=7, headers={'User-Agent': user_agent}, proxies={"http": None, "https": None})
                     except BaseException:
                         url = 'https://ritualsong.work/subjadeites/ffxiv-gatherer-clock/raw/branch/master/version.json'
